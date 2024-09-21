@@ -1,0 +1,2 @@
+class DynamiteAgent:
+    pass

@@ -1,0 +1,10 @@
+S, C, C, C, C, C, R, C, M, C
+R, C, C, C, C, R, M, C, C, C
+C, C, C, M, C, C, C, C, C, C
+M, R, C, C, M, C, C, C, C, C
+C, C, M, C, C, C, C, C, R, C
+M, R, C, C, C, C, M, C, C, C
+M, R, C, C, R, C, C, M, C, C
+C, C, C, C, C, C, R, C, M, C
+C, C, R, C, C, C, C, R, C, M
+C, C, R, C, C, C, C, C, C, G
