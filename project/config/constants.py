@@ -27,10 +27,10 @@ COLOR_ROCK = "#808080"
 COLOR_METAL = "#A9A9A9"
 
 # Rutas de las imágenes de los agentes
-IMG_BOMBERMAN = "project/assets/images/character/walk-right.png"
-IMG_GRASS = "project/assets/images/terrain/grass.png"
-IMG_ROCK = "project/assets/images/terrain/rock.png"
-IMG_METAL = "project/assets/images/terrain/wall.png"
+IMG_BOMBERMAN = "project/assets/images/character/bomberman1.png"
+IMG_GRASS = "project/assets/images/terrain/grass1.png"
+IMG_ROCK = "project/assets/images/terrain/wall.png"
+IMG_METAL = "project/assets/images/terrain/metal.png"
 IMG_GROUND = "project/assets/images/terrain/ground.png"
 
 # Rutas de los mapas

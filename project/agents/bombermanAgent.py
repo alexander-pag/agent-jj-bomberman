@@ -52,7 +52,13 @@ class BombermanAgent(Agent):
         algorithm = self.algorithms.get(self.model.search_algorithm)
 
         if algorithm:
-            self.path = algorithm(self.pos, self.goal, self.model, self.model.heuristic)
+            if self.model.search_algorithm == ASTAR:
+                self.path = algorithm(
+                    self.pos, self.goal, self.model, self.model.heuristic
+                )
+            else:
+                self.path = algorithm(self.pos, self.goal, self.model)
+
             if self.path is None:
                 logger.warning(
                     f"No se encontró un camino desde {self.pos} hasta {self.goal}"
