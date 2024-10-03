@@ -72,19 +72,26 @@ class BombermanAgent(Agent):
 
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
-        next_step = self.path.pop(0)
+        if self.path:
+            next_step = self.path.pop(0)
 
-        if not self.verify_obstacle(
-            self.model.grid.get_cell_list_contents([next_step])
-        ):
-            self.model.grid.move_agent(self, next_step)
-            self.pos = next_step  # Actualizar la posición del agente
-            self.model.visited_cells.add(self.pos)  # Registrar celda visitada
-            logger.info(f"Movido a {self.pos}")
+            # Verificar si hay obstáculos en la celda siguiente
+            if not self.verify_obstacle(
+                self.model.grid.get_cell_list_contents([next_step])
+            ):
+                self.model.grid.move_agent(self, next_step)
+                self.pos = next_step  # Actualizar la posición del agente
 
-        if self.verify_exit():
-            logger.info("¡Victoria! El Bomberman ha encontrado la salida.")
-            self.model.running = False  # Detener la simulación
+                # Registrar la celda visitada
+                if self.pos not in self.model.visited_cells:
+                    visit_number = len(self.model.visited_cells) + 1
+                    self.model.visited_cells.add((self.pos, visit_number))
+
+                logger.info(f"Movido a {self.pos}")
+
+            if self.verify_exit():
+                logger.info("¡Victoria! El Bomberman ha encontrado la salida.")
+                self.model.running = False  # Detener la simulación
 
     def verify_obstacle(self, cellmates) -> bool:
         """

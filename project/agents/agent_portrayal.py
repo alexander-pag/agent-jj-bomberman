@@ -28,22 +28,29 @@ def agent_portrayal(agent) -> dict:
 
 
 def grass_portrayal(agent):
-    if agent.pos in agent.model.visited_cells:
-        return {
-            "Shape": get_image_path(IMG_GROUND),
-            "Filled": "true",
-            "Layer": 0,
-            "w": 1,
-            "h": 1,
-        }
+    portrayal = {
+        "Shape": "rect",
+        "Filled": "true",
+        "Layer": 0,
+        "w": 1,
+        "h": 1,
+    }
+
+    # Buscar si la celda ha sido visitada
+    visit_info = next(
+        (info for pos, info in agent.model.visited_cells if pos == agent.pos), None
+    )
+
+    if visit_info:
+        # Si ha sido visitada, mostrar el número de visita
+        portrayal["Shape"] = get_image_path(IMG_GROUND)
+        portrayal["text"] = str(visit_info)
+        portrayal["text_color"] = "white"
     else:
-        return {
-            "Shape": get_image_path(IMG_GRASS),
-            "Filled": "true",
-            "Layer": 0,
-            "w": 1,
-            "h": 1,
-        }
+        # Si no ha sido visitada, mostrar césped
+        portrayal["Shape"] = get_image_path(IMG_GRASS)
+
+    return portrayal
 
 
 def rock_portrayal():

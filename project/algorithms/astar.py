@@ -78,11 +78,12 @@ def astar_search(start, goal, model, heuristic) -> list:
 
             # Revisar si la celda está libre de obstáculos
             cell_contents = model.grid.get_cell_list_contents([neighbor])
-            if any(
-                isinstance(agent, (RockAgent, MetalAgent)) for agent in cell_contents
-            ):
+            if any(isinstance(agent, (MetalAgent)) for agent in cell_contents):
                 logger.info(f"Neighbor {neighbor} is an obstacle")
                 continue
+
+            if any(isinstance(agent, (RockAgent)) for agent in cell_contents):
+                logger.info(f"Is rock {neighbor} break with dynamite")
 
             tentative_g_score = g_score[current] + 1
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
