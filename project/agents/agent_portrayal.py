@@ -41,14 +41,19 @@ def grass_portrayal(agent):
         (info for pos, info in agent.model.visited_cells if pos == agent.pos), None
     )
 
-    if visit_info:
-        # Si ha sido visitada, mostrar el número de visita
-        portrayal["Shape"] = get_image_path(IMG_GROUND)
+    if agent.pos in agent.model.final_path_cells:
+        # Si la celda es parte de la ruta final, usar un color especial y mostrar el número de paso
+        portrayal["Shape"] = get_image_path(IMG_GROUND)  # La ruta final
+        portrayal["text"] = str(visit_info) if visit_info else ""
+        portrayal["text_color"] = "yellow"
+    elif visit_info:
+        # Si la celda ha sido visitada pero no es parte de la ruta final
+        portrayal["Shape"] = get_image_path(IMG_GRASS)  # Cesped visitado
         portrayal["text"] = str(visit_info)
         portrayal["text_color"] = "white"
     else:
         # Si no ha sido visitada, mostrar césped
-        portrayal["Shape"] = get_image_path(IMG_GRASS)
+        portrayal["Shape"] = get_image_path(IMG_GRASS)  # Cesped no visitado
 
     return portrayal
 

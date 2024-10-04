@@ -45,9 +45,18 @@ ALGORITHMS = [BFS, DFS, UCS, ASTAR]
 ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"
 MAP_SELECTOR_TITLE = "Mapa"
 HEURISTIC_SELECTOR_TITLE = "Heurística"
+PRIORITY_SELECTOR_TITLE = "Prioridad"
 
 # Valores del selector de heurísticas
 HEURISTICS = ["Manhattan", "Euclidean"]
+
+# Valores del selector de prioridades
+PRIORITIES = [
+    "Arriba, Abajo, Derecha, Izquierda",
+    "Arriba, Derecha, Abajo, Izquierda",
+    "Arriba, Izquierda, Abajo, Derecha",
+    "Derecha, Izquierda, Abajo, Arriba",
+]
 
 # Nombre del proyecto
 PROJECT_NAME = "Bomberman v1.0"

@@ -15,6 +15,8 @@ from config.constants import (
     PROJECT_DESCRIPTION,
     HEURISTIC_SELECTOR_TITLE,
     HEURISTICS,
+    PRIORITY_SELECTOR_TITLE,
+    PRIORITIES,
 )
 
 
@@ -45,6 +47,11 @@ def run_simulation():
             name=ALGORITHM_SELECTOR_TITLE,
             value=ALGORITHMS[0],
             choices=ALGORITHMS,
+        ),
+        "priority": Choice(
+            name=PRIORITY_SELECTOR_TITLE,
+            value=PRIORITIES[0],
+            choices=PRIORITIES,
         ),
         "heuristic": Choice(
             name=HEURISTIC_SELECTOR_TITLE,

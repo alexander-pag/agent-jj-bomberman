@@ -15,16 +15,19 @@ class BombermanModel(Model):
         pos_bomberman,
         number_of_agents,
         search_algorithm,
+        priority,
         heuristic,
     ):
         super().__init__()
         self.num_agents = number_of_agents
         self.search_algorithm = search_algorithm
         self.heuristic = heuristic
-        self.visited_cells = set()
+        self.visited_cells = []
+        self.final_path_cells = set()  # Celdas en la ruta final
         self.grid = MultiGrid(width, height, torus=False)
         self.schedule = RandomActivation(self)
         self.running = True
+        self.priority = priority
         self.pos_goal = pos_goal
         self.create_map(map_data)
 

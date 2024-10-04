@@ -53,11 +53,11 @@ class BombermanAgent(Agent):
 
         if algorithm:
             if self.model.search_algorithm == ASTAR:
-                self.path = algorithm(
+                self.path, visited_order = algorithm(
                     self.pos, self.goal, self.model, self.model.heuristic
                 )
             else:
-                self.path = algorithm(self.pos, self.goal, self.model)
+                self.path, visited_order = algorithm(self.pos, self.goal, self.model)
 
             if self.path is None:
                 logger.warning(
@@ -65,6 +65,14 @@ class BombermanAgent(Agent):
                 )
             else:
                 logger.info(f"Camino encontrado: {self.path}")
+
+                # Guardar el orden en que se visitaron los nodos
+                self.model.visited_cells = [
+                    (pos, idx + 1) for idx, pos in enumerate(visited_order)
+                ]
+
+                # Guardar las celdas que son parte del camino final
+                self.model.final_path_cells = set(self.path)
         else:
             logger.error(
                 f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
@@ -73,25 +81,28 @@ class BombermanAgent(Agent):
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
         if self.path:
+            # Tomar el siguiente paso en el camino
             next_step = self.path.pop(0)
 
-            # Verificar si hay obstáculos en la celda siguiente
-            if not self.verify_obstacle(
-                self.model.grid.get_cell_list_contents([next_step])
-            ):
-                self.model.grid.move_agent(self, next_step)
-                self.pos = next_step  # Actualizar la posición del agente
+            # Mover el agente a la siguiente posición
+            self.model.grid.move_agent(self, next_step)
+            self.pos = next_step  # Actualizar la posición del agente
 
-                # Registrar la celda visitada
-                if self.pos not in self.model.visited_cells:
-                    visit_number = len(self.model.visited_cells) + 1
-                    self.model.visited_cells.add((self.pos, visit_number))
+            # Marcar esta celda como parte del camino final, pero una a una
+            if self.pos not in self.model.final_path_cells:
+                self.model.final_path_cells.append(self.pos)
 
-                logger.info(f"Movido a {self.pos}")
+            # Registrar la celda visitada si no está ya registrada
+            if self.pos not in [pos for pos, _ in self.model.visited_cells]:
+                visit_number = len(self.model.visited_cells) + 1
+                self.model.visited_cells.append((self.pos, visit_number))
 
-            if self.verify_exit():
-                logger.info("¡Victoria! El Bomberman ha encontrado la salida.")
-                self.model.running = False  # Detener la simulación
+            logger.info(f"Movido a {self.pos}")
+
+        # Comprobar si el agente ha alcanzado la salida
+        if self.verify_exit():
+            logger.info("¡Victoria! El Bomberman ha encontrado la salida.")
+            self.model.running = False  # Detener la simulación
 
     def verify_obstacle(self, cellmates) -> bool:
         """

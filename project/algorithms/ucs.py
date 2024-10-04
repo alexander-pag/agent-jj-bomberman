@@ -19,18 +19,48 @@ def get_cost(agent, current_pos) -> float:
     """
     if isinstance(agent, GrassAgent):
         if agent.pos[1] > current_pos[1]:
-            return 1.3  # Costo para el caso en que el movimiento sea en el eje Y hacia arriba
+            return 10  # Costo para el caso en que el movimiento sea en el eje Y hacia arriba
         elif agent.pos[1] < current_pos[1]:
-            return (
-                3  # Costo para el caso en que el movimiento sea en el eje Y hacia abajo
-            )
+            return 10  # Costo para el caso en que el movimiento sea en el eje Y hacia abajo
         elif agent.pos[0] > current_pos[0]:
-            return 4  # Costo para el caso en que el movimiento sea en el eje X hacia la derecha
+            return 10  # Costo para el caso en que el movimiento sea en el eje X hacia la derecha
         elif agent.pos[0] < current_pos[0]:
-            return 2  # Costo para el caso en que el movimiento sea en el eje X hacia la izquierda
+            return 10  # Costo para el caso en que el movimiento sea en el eje X hacia la izquierda
     elif isinstance(agent, RockAgent) or isinstance(agent, MetalAgent):
         return float("inf")  # Imposible moverse a una celda con roca o metal
     return 1  # Costo por defecto si no hay agentes de terreno (quizás terreno vacío)
+
+
+def get_neighbors_by_priority(neighbors, current_pos, priority):
+    """
+    Ordena los vecinos según la prioridad dada.
+
+    Args:
+        neighbors: Lista de vecinos.
+        current_pos: Posición actual del agente.
+        priority: Una cadena que indica la prioridad de exploración (ejemplo: "Arriba, Abajo, Derecha, Izquierda").
+
+    Returns:
+        Lista de vecinos ordenada según la prioridad.
+    """
+
+    print(f"LA PRIORIDAD ES: ", priority)
+
+    # Mapeo de direcciones cardinales a coordenadas
+    direction_mapping = {
+        "Arriba": (current_pos[0], current_pos[1] - 1),
+        "Abajo": (current_pos[0], current_pos[1] + 1),
+        "Derecha": (current_pos[0] + 1, current_pos[1]),
+        "Izquierda": (current_pos[0] - 1, current_pos[1]),
+    }
+
+    # Crear lista de vecinos ordenada por prioridad
+    ordered_neighbors = []
+    for direction in priority.split(", "):
+        if direction_mapping[direction] in neighbors:
+            ordered_neighbors.append(direction_mapping[direction])
+
+    return ordered_neighbors
 
 
 def ucs(start_pos, goal_pos, model) -> list:
@@ -48,10 +78,10 @@ def ucs(start_pos, goal_pos, model) -> list:
     """
     # Cola de prioridad para almacenar (costo acumulado, posición actual, camino)
     queue = [(0, start_pos, [start_pos])]
-    # El heap se inicializa con el nodo inicial (costo 0, posición inicial, camino inicial)
-
     visited = set()  # Conjunto de nodos visitados
+    visited_order = []
     cost_so_far = {start_pos: 0}  # Costo acumulado hasta la celda
+    priority = model.priority  # Obtén la prioridad de la exploración desde el modelo
 
     while queue:
         # Sacar el nodo con el menor costo acumulado
@@ -66,17 +96,21 @@ def ucs(start_pos, goal_pos, model) -> list:
             continue  # Saltamos si ya fue visitado
 
         visited.add(current_pos)
+        visited_order.append(current_pos)
 
         # Si llegamos a la meta, devolvemos el camino
         if current_pos == goal_pos:
-            return path
+            return path, visited_order
 
         # Obtener las celdas vecinas ortogonalmente
         neighbors = model.grid.get_neighborhood(
             current_pos, moore=False, include_center=False
         )
 
-        for neighbor in neighbors:
+        # Ordenar los vecinos según la prioridad (como cadena)
+        ordered_neighbors = get_neighbors_by_priority(neighbors, current_pos, priority)
+
+        for neighbor in ordered_neighbors:
             if neighbor not in visited:
                 # Obtener el contenido de la celda vecina
                 cellmates = model.grid.get_cell_list_contents([neighbor])
@@ -86,9 +120,9 @@ def ucs(start_pos, goal_pos, model) -> list:
                 # Si la celda es transitable (sin obstáculos insalvables)
                 if move_cost < float("inf"):
                     new_cost = current_cost + move_cost
+                    # No sobrescribimos priority, mantenemos la prioridad original
                     if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                         cost_so_far[neighbor] = new_cost
-                        priority = new_cost
-                        heapq.heappush(queue, (priority, neighbor, path + [neighbor]))
+                        heapq.heappush(queue, (new_cost, neighbor, path + [neighbor]))
 
-    return None  # Si no se encuentra un camino
+    return None, visited_order  # Si no se encuentra un camino
