@@ -84,8 +84,8 @@ def dfs(start, goal, model) -> list:
 
     while stack:
 
-        logger.info(f"Lista de nodos visitados: {visited}")
-        logger.info(f"Pila de nodos: {stack}")
+        # logger.info(f"Lista de nodos visitados: {visited}")
+        # logger.info(f"Pila de nodos: {stack}")
 
         current, path = stack.pop()
 
@@ -111,5 +111,5 @@ def dfs(start, goal, model) -> list:
                 if is_valid_move(neighbor) and neighbor not in visited:
                     stack.append((neighbor, path + [neighbor]))
 
-    logger.warning(f"No se encontró un camino desde {start} hasta {goal}")
+    # logger.warning(f"No se encontró un camino desde {start} hasta {goal}")
     return None, visited_order

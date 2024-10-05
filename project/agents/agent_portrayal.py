@@ -41,19 +41,19 @@ def grass_portrayal(agent):
         (info for pos, info in agent.model.visited_cells if pos == agent.pos), None
     )
 
-    if agent.pos in agent.model.final_path_cells:
-        # Si la celda es parte de la ruta final, usar un color especial y mostrar el número de paso
-        portrayal["Shape"] = get_image_path(IMG_GROUND)  # La ruta final
+    if agent.pos in agent.model.visited_ground_cells:
+        # Si la celda ha sido visitada por Bomberman, mostrar 'ground'
+        portrayal["Shape"] = get_image_path(IMG_GROUND)
         portrayal["text"] = str(visit_info) if visit_info else ""
         portrayal["text_color"] = "yellow"
     elif visit_info:
-        # Si la celda ha sido visitada pero no es parte de la ruta final
-        portrayal["Shape"] = get_image_path(IMG_GRASS)  # Cesped visitado
+        # Si la celda ha sido visitada pero no es parte del camino actual
+        portrayal["Shape"] = get_image_path(IMG_GRASS)
         portrayal["text"] = str(visit_info)
         portrayal["text_color"] = "white"
     else:
-        # Si no ha sido visitada, mostrar césped
-        portrayal["Shape"] = get_image_path(IMG_GRASS)  # Cesped no visitado
+        # Si no ha sido visitada, mostrar césped normal
+        portrayal["Shape"] = get_image_path(IMG_GRASS)
 
     return portrayal
 

@@ -23,7 +23,8 @@ class BombermanModel(Model):
         self.search_algorithm = search_algorithm
         self.heuristic = heuristic
         self.visited_cells = []
-        self.final_path_cells = set()  # Celdas en la ruta final
+        self.final_path_cells = set()
+        self.visited_ground_cells = set()
         self.grid = MultiGrid(width, height, torus=False)
         self.schedule = RandomActivation(self)
         self.running = True
