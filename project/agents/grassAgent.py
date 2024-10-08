@@ -1,4 +1,3 @@
-__package__ = "agents"
 from .terrainAgent import TerrainAgent
 
 

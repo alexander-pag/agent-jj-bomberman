@@ -1,37 +1,8 @@
-from agents import RockAgent, MetalAgent
 import logging
+from helpers.move_by_priority import get_neighbors_by_priority
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def get_neighbors_by_priority(neighbors, current_pos, priority):
-    """
-    Ordena los vecinos según la prioridad dada.
-
-    Args:
-        neighbors: Lista de vecinos.
-        current_pos: Posición actual del agente.
-        priority: Una cadena que indica la prioridad de exploración (ejemplo: "Arriba, Abajo, Derecha, Izquierda").
-
-    Returns:
-        Lista de vecinos ordenada según la prioridad.
-    """
-    # Mapeo de direcciones cardinales a coordenadas
-    direction_mapping = {
-        "Arriba": (current_pos[0], current_pos[1] - 1),
-        "Abajo": (current_pos[0], current_pos[1] + 1),
-        "Derecha": (current_pos[0] + 1, current_pos[1]),
-        "Izquierda": (current_pos[0] - 1, current_pos[1]),
-    }
-
-    # Crear lista de vecinos ordenada por prioridad
-    ordered_neighbors = []
-    for direction in priority.split(", "):
-        if direction_mapping[direction] in neighbors:
-            ordered_neighbors.append(direction_mapping[direction])
-
-    return ordered_neighbors
 
 
 def dfs(start, goal, model) -> list:
@@ -47,6 +18,8 @@ def dfs(start, goal, model) -> list:
     Returns:
         Una lista de posiciones que representa el camino encontrado, o None si no existe camino.
     """
+
+    from agents import RockAgent, MetalAgent, BorderAgent
 
     def is_valid_move(pos) -> bool:
         """
@@ -66,7 +39,7 @@ def dfs(start, goal, model) -> list:
         # Revisar si la celda está libre de obstáculos
         cell_contents = model.grid.get_cell_list_contents([pos])
         for agent in cell_contents:
-            if isinstance(agent, (RockAgent, MetalAgent)):
+            if isinstance(agent, (RockAgent, MetalAgent, BorderAgent)):
                 return False
         return True
 
@@ -83,10 +56,6 @@ def dfs(start, goal, model) -> list:
     priority = model.priority
 
     while stack:
-
-        # logger.info(f"Lista de nodos visitados: {visited}")
-        # logger.info(f"Pila de nodos: {stack}")
-
         current, path = stack.pop()
 
         visited_order.append(current)
@@ -111,5 +80,4 @@ def dfs(start, goal, model) -> list:
                 if is_valid_move(neighbor) and neighbor not in visited:
                     stack.append((neighbor, path + [neighbor]))
 
-    # logger.warning(f"No se encontró un camino desde {start} hasta {goal}")
     return None, visited_order

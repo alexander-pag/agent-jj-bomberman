@@ -1,7 +1,7 @@
 from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
-from agents import BombermanAgent, GrassAgent, MetalAgent, RockAgent
+from agents import BombermanAgent, GrassAgent, MetalAgent, RockAgent, BorderAgent
 from config.constants import *
 
 
@@ -36,7 +36,6 @@ class BombermanModel(Model):
 
         self.grid.place_agent(self.bomberman, self.bomberman.pos)
 
-        # Agregar Bomberman al scheduler
         self.schedule.add(self.bomberman)
 
     def create_map(self, map_data) -> None:
@@ -61,6 +60,8 @@ class BombermanModel(Model):
                     cell = RockAgent((x, y), self)
                 elif terrain_type == METAL:
                     cell = MetalAgent((x, y), self)
+                elif terrain_type == BORDER:
+                    cell = BorderAgent((x, y), self)
                 else:
                     continue
 

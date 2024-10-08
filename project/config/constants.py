@@ -20,6 +20,7 @@ ROCK = "R"
 METAL = "M"
 BOMBERMAN = "S"
 GOAL = "G"
+BORDER = "X"
 
 # Colores para las celdas (usado en la representación visual)
 COLOR_GRASS = "#00FF00"
@@ -27,16 +28,20 @@ COLOR_ROCK = "#808080"
 COLOR_METAL = "#A9A9A9"
 
 # Rutas de las imágenes de los agentes
-IMG_BOMBERMAN = "project/assets/images/character/bomberman1.png"
-IMG_GRASS = "project/assets/images/terrain/grass1.png"
-IMG_ROCK = "project/assets/images/terrain/wall.png"
+IMG_BOMBERMAN = "project/assets/images/character/bomberman.png"
+IMG_GRASS = "project/assets/images/terrain/grass.png"
+IMG_ROCK = "project/assets/images/terrain/wall1.png"
+IMG_BORDER = "project/assets/images/terrain/border.png"
 IMG_METAL = "project/assets/images/terrain/metal.png"
-IMG_GROUND = "project/assets/images/terrain/ground.png"
+IMG_GROUND = "project/assets/images/terrain/ground1.png"
 
 # Rutas de los mapas
 MAP_5X5 = "project/assets/maps/5x5.txt"
 MAP_10X10 = "project/assets/maps/10x10.txt"
 MAP_20X20 = "project/assets/maps/20x20.txt"
+MAP_20X20_1 = "project/assets/maps/20x20_1.txt"
+MAP_20X20_2 = "project/assets/maps/20x20_2.txt"
+MAP_20X20_3 = "project/assets/maps/20x20_3.txt"
 
 # Valores del selector de algoritmos
 ALGORITHMS = [BFS, DFS, UCS, ASTAR]

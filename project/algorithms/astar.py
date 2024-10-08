@@ -1,11 +1,7 @@
 import heapq
-from agents import RockAgent, MetalAgent
 from config.constants import HEURISTICS
-import logging
+from helpers.move_by_priority import get_neighbors_by_priority
 import math
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def astar_search(start, goal, model, heuristic) -> list:
@@ -22,38 +18,25 @@ def astar_search(start, goal, model, heuristic) -> list:
         list: Lista de coordenadas que representan el camino más corto entre start y goal.
     """
 
-    # Movimiento en 4 direcciones (arriba, abajo, izquierda, derecha)
-    directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
+    from agents import RockAgent, MetalAgent, BorderAgent
 
+    # Función para calcular la heurística (Manhattan o Euclidiana)
     def heuristic_manhattan_euclidean(a, b) -> int:
-        """
-        Calcula la distancia de Manhattan entre dos puntos.
-
-        Args:
-            a (tuple): Coordenadas del punto A.
-            b (tuple): Coordenadas del punto B.
-
-        Returns:
-            int: Distancia de Manhattan entre los dos puntos.
-        """
-
-        # Distancia de Manhattan
         if heuristic == HEURISTICS[0]:
             return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-        # Distancia euclidiana
         return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
     open_set = []
     heapq.heappush(open_set, (0, start))
     came_from = {}
+    visited_order = []
     g_score = {start: 0}
     f_score = {start: heuristic_manhattan_euclidean(start, goal)}
 
-    logger.info(f"Starting A* from {start} to {goal}")
-
     while open_set:
         _, current = heapq.heappop(open_set)
+
+        visited_order.append(current)
 
         if current == goal:
             # Reconstruir el camino
@@ -64,26 +47,32 @@ def astar_search(start, goal, model, heuristic) -> list:
             path.append(start)
             path.reverse()
             print(f"Path found: {path}")
-            return path
+            return path, visited_order
 
-        logger.info(f"Processing current node: {current}")
+        # Obtener los vecinos ortogonales
+        neighbors = model.grid.get_neighborhood(
+            current, moore=False, include_center=False
+        )
+        # Obtener la prioridad desde el modelo (asegúrate de que esta propiedad existe)
+        priority = model.priority
+        # Ordenar los vecinos por prioridad
+        ordered_neighbors = get_neighbors_by_priority(neighbors, current, priority)
 
-        for direction in directions:
-            neighbor = (current[0] + direction[0], current[1] + direction[1])
-
+        for neighbor in ordered_neighbors:
             # Asegurarse de que el vecino no esté fuera de límites
             if model.grid.out_of_bounds(neighbor):
-                logger.info(f"Neighbor {neighbor} out of bounds")
                 continue
 
             # Revisar si la celda está libre de obstáculos
             cell_contents = model.grid.get_cell_list_contents([neighbor])
             if any(isinstance(agent, (MetalAgent)) for agent in cell_contents):
-                logger.info(f"Neighbor {neighbor} is an obstacle")
                 continue
 
             if any(isinstance(agent, (RockAgent)) for agent in cell_contents):
-                logger.info(f"Is rock {neighbor} break with dynamite")
+                continue
+
+            if any(isinstance(agent, (BorderAgent)) for agent in cell_contents):
+                continue
 
             tentative_g_score = g_score[current] + 1
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
@@ -93,9 +82,5 @@ def astar_search(start, goal, model, heuristic) -> list:
                     neighbor, goal
                 )
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
-                logger.info(
-                    f"Neighbor {neighbor} added to open set with f_score {f_score[neighbor]}"
-                )
 
-    logger.warning(f"No path found from {start} to {goal}")
-    return None  # No se encontró un camino
+    return None, visited_order

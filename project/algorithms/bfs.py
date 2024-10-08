@@ -1,41 +1,9 @@
 from collections import deque
-from agents import MetalAgent, RockAgent
 import logging
+from helpers.move_by_priority import get_neighbors_by_priority
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def get_neighbors_by_priority(neighbors, current_pos, priority):
-    """
-    Ordena los vecinos según la prioridad dada.
-
-    Args:
-        neighbors: Lista de vecinos.
-        current_pos: Posición actual del agente.
-        priority: Una cadena que indica la prioridad de exploración (ejemplo: "Arriba, Abajo, Derecha, Izquierda").
-
-    Returns:
-        Lista de vecinos ordenada según la prioridad.
-    """
-
-    print(f"LA PRIORIDAD ES: ", priority)
-
-    # Mapeo de direcciones cardinales a coordenadas
-    direction_mapping = {
-        "Arriba": (current_pos[0], current_pos[1] - 1),
-        "Abajo": (current_pos[0], current_pos[1] + 1),
-        "Derecha": (current_pos[0] + 1, current_pos[1]),
-        "Izquierda": (current_pos[0] - 1, current_pos[1]),
-    }
-
-    # Crear lista de vecinos ordenada por prioridad
-    ordered_neighbors = []
-    for direction in priority.split(", "):
-        if direction_mapping[direction] in neighbors:
-            ordered_neighbors.append(direction_mapping[direction])
-
-    return ordered_neighbors
 
 
 def bfs(start_pos, goal_pos, model):
@@ -53,6 +21,8 @@ def bfs(start_pos, goal_pos, model):
         2. Una lista de posiciones visitadas en el orden en que se exploraron.
     """
 
+    from agents import MetalAgent, RockAgent, BorderAgent
+
     # Cola para almacenar el nodo actual y el camino recorrido hasta la meta
     queue = deque([(start_pos, [start_pos])])
 
@@ -66,9 +36,6 @@ def bfs(start_pos, goal_pos, model):
     priority = model.priority
 
     while queue:
-        logger.info(f"Lista de nodos visitados: {visited}")
-        logger.info(f"Cola de nodos: {queue}")
-
         # Extraer la posición actual y el camino hasta esa posición
         current_pos, path = queue.popleft()
 
@@ -96,12 +63,12 @@ def bfs(start_pos, goal_pos, model):
                 # Verificar que la celda no esté ocupada por obstáculos
                 cellmates = model.grid.get_cell_list_contents([neighbor])
                 if not any(
-                    isinstance(agent, (MetalAgent, RockAgent)) for agent in cellmates
+                    isinstance(agent, (MetalAgent, RockAgent, BorderAgent))
+                    for agent in cellmates
                 ):
                     # Agregar el vecino a la cola con el camino actualizado
                     queue.append((neighbor, path + [neighbor]))
                     visited.add(neighbor)  # Marcar el vecino como visitado
 
     # Si no se encontró un camino, retornamos None para el camino y el orden de visita
-    logger.warning(f"No se encontró un camino desde {start_pos} hasta {goal_pos}")
     return None, visited_order

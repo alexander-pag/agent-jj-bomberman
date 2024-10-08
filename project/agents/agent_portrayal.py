@@ -1,6 +1,13 @@
-from agents import BombermanAgent, GrassAgent, MetalAgent, RockAgent
+from agents import BombermanAgent, GrassAgent, MetalAgent, RockAgent, BorderAgent
 from helpers.file_reader import get_image_path
-from config.constants import IMG_GRASS, IMG_GROUND, IMG_ROCK, IMG_METAL, IMG_BOMBERMAN
+from config.constants import (
+    IMG_GRASS,
+    IMG_GROUND,
+    IMG_ROCK,
+    IMG_METAL,
+    IMG_BOMBERMAN,
+    IMG_BORDER,
+)
 
 
 def agent_portrayal(agent) -> dict:
@@ -21,6 +28,8 @@ def agent_portrayal(agent) -> dict:
         return rock_portrayal()
     elif isinstance(agent, MetalAgent):
         return metal_portrayal()
+    elif isinstance(agent, BorderAgent):
+        return border_portrayal()
     elif isinstance(agent, BombermanAgent):
         portrayal["Shape"] = get_image_path(IMG_BOMBERMAN)
         portrayal["Layer"] = 1
@@ -36,23 +45,19 @@ def grass_portrayal(agent):
         "h": 1,
     }
 
-    # Buscar si la celda ha sido visitada
     visit_info = next(
         (info for pos, info in agent.model.visited_cells if pos == agent.pos), None
     )
 
     if agent.pos in agent.model.visited_ground_cells:
-        # Si la celda ha sido visitada por Bomberman, mostrar 'ground'
         portrayal["Shape"] = get_image_path(IMG_GROUND)
         portrayal["text"] = str(visit_info) if visit_info else ""
         portrayal["text_color"] = "yellow"
     elif visit_info:
-        # Si la celda ha sido visitada pero no es parte del camino actual
         portrayal["Shape"] = get_image_path(IMG_GRASS)
         portrayal["text"] = str(visit_info)
         portrayal["text_color"] = "white"
     else:
-        # Si no ha sido visitada, mostrar césped normal
         portrayal["Shape"] = get_image_path(IMG_GRASS)
 
     return portrayal
@@ -61,6 +66,16 @@ def grass_portrayal(agent):
 def rock_portrayal():
     return {
         "Shape": get_image_path(IMG_ROCK),
+        "Filled": "true",
+        "Layer": 0,
+        "w": 1,
+        "h": 1,
+    }
+
+
+def border_portrayal():
+    return {
+        "Shape": get_image_path(IMG_BORDER),
         "Filled": "true",
         "Layer": 0,
         "w": 1,

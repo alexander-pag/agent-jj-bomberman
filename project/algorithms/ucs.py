@@ -1,6 +1,6 @@
 import heapq
-from agents import GrassAgent, RockAgent, MetalAgent
 import logging
+from helpers.move_by_priority import get_neighbors_by_priority
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,6 +17,9 @@ def get_cost(agent, current_pos) -> float:
     Returns:
         float: Costo de moverse a la celda.
     """
+
+    from agents import GrassAgent, RockAgent, MetalAgent, BorderAgent
+
     if isinstance(agent, GrassAgent):
         if agent.pos[1] > current_pos[1]:
             return 10  # Costo para el caso en que el movimiento sea en el eje Y hacia arriba
@@ -26,41 +29,13 @@ def get_cost(agent, current_pos) -> float:
             return 10  # Costo para el caso en que el movimiento sea en el eje X hacia la derecha
         elif agent.pos[0] < current_pos[0]:
             return 10  # Costo para el caso en que el movimiento sea en el eje X hacia la izquierda
-    elif isinstance(agent, RockAgent) or isinstance(agent, MetalAgent):
+    elif (
+        isinstance(agent, RockAgent)
+        or isinstance(agent, MetalAgent)
+        or (agent, BorderAgent)
+    ):
         return float("inf")  # Imposible moverse a una celda con roca o metal
     return 1  # Costo por defecto si no hay agentes de terreno (quizás terreno vacío)
-
-
-def get_neighbors_by_priority(neighbors, current_pos, priority):
-    """
-    Ordena los vecinos según la prioridad dada.
-
-    Args:
-        neighbors: Lista de vecinos.
-        current_pos: Posición actual del agente.
-        priority: Una cadena que indica la prioridad de exploración (ejemplo: "Arriba, Abajo, Derecha, Izquierda").
-
-    Returns:
-        Lista de vecinos ordenada según la prioridad.
-    """
-
-    print(f"LA PRIORIDAD ES: ", priority)
-
-    # Mapeo de direcciones cardinales a coordenadas
-    direction_mapping = {
-        "Arriba": (current_pos[0], current_pos[1] - 1),
-        "Abajo": (current_pos[0], current_pos[1] + 1),
-        "Derecha": (current_pos[0] + 1, current_pos[1]),
-        "Izquierda": (current_pos[0] - 1, current_pos[1]),
-    }
-
-    # Crear lista de vecinos ordenada por prioridad
-    ordered_neighbors = []
-    for direction in priority.split(", "):
-        if direction_mapping[direction] in neighbors:
-            ordered_neighbors.append(direction_mapping[direction])
-
-    return ordered_neighbors
 
 
 def ucs(start_pos, goal_pos, model) -> list:
@@ -86,11 +61,6 @@ def ucs(start_pos, goal_pos, model) -> list:
     while queue:
         # Sacar el nodo con el menor costo acumulado
         current_cost, current_pos, path = heapq.heappop(queue)
-        logger.info(f"Explorando {current_pos} con costo {current_cost}")
-        logger.info(f"Camino actual: {path}")
-        logger.info(f"Costo acumulado: {cost_so_far[current_pos]}")
-        logger.info(f"Cola de prioridad: {queue}")
-        logger.info(f"Nodos visitados: {visited}")
 
         if current_pos in visited:
             continue  # Saltamos si ya fue visitado
