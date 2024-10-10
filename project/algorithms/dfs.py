@@ -72,10 +72,12 @@ def dfs(start, goal, model) -> list:
                 current, moore=False, include_center=False
             )
 
+            # Ordenar los vecinos según la prioridad
             ordered_neighbors = get_neighbors_by_priority(neighbors, current, priority)
 
-            # Explorar vecinos
-            for neighbor in ordered_neighbors:
+            # Invertir el orden de los vecinos antes de añadirlos a la pila
+            # para asegurarnos de que el vecino de mayor prioridad se explore primero
+            for neighbor in reversed(ordered_neighbors):
                 # Verificar si el movimiento es válido y si no hemos visitado ya el vecino
                 if is_valid_move(neighbor) and neighbor not in visited:
                     stack.append((neighbor, path + [neighbor]))

@@ -13,8 +13,8 @@ def get_neighbors_by_priority(neighbors, current_pos, priority):
 
     # Mapeo de direcciones cardinales a coordenadas
     direction_mapping = {
-        "Arriba": (current_pos[0], current_pos[1] - 1),
-        "Abajo": (current_pos[0], current_pos[1] + 1),
+        "Arriba": (current_pos[0], current_pos[1] + 1),
+        "Abajo": (current_pos[0], current_pos[1] - 1),
         "Derecha": (current_pos[0] + 1, current_pos[1]),
         "Izquierda": (current_pos[0] - 1, current_pos[1]),
     }

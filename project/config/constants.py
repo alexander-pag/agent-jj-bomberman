@@ -33,6 +33,7 @@ IMG_GRASS = "project/assets/images/terrain/grass.png"
 IMG_ROCK = "project/assets/images/terrain/wall1.png"
 IMG_BORDER = "project/assets/images/terrain/border.png"
 IMG_METAL = "project/assets/images/terrain/metal.png"
+IMG_GOAL = "project/assets/images/terrain/goal.png"
 IMG_GROUND = "project/assets/images/terrain/ground1.png"
 
 # Rutas de los mapas
@@ -57,6 +58,7 @@ HEURISTICS = ["Manhattan", "Euclidean"]
 
 # Valores del selector de prioridades
 PRIORITIES = [
+    "Izquierda, Arriba, Derecha, Abajo",
     "Arriba, Abajo, Derecha, Izquierda",
     "Arriba, Derecha, Abajo, Izquierda",
     "Arriba, Izquierda, Abajo, Derecha",

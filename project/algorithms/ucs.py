@@ -18,9 +18,9 @@ def get_cost(agent, current_pos) -> float:
         float: Costo de moverse a la celda.
     """
 
-    from agents import GrassAgent, RockAgent, MetalAgent, BorderAgent
+    from agents import GrassAgent, RockAgent, MetalAgent, BorderAgent, GoalAgent
 
-    if isinstance(agent, GrassAgent):
+    if isinstance(agent, GrassAgent) or isinstance(agent, GoalAgent):
         if agent.pos[1] > current_pos[1]:
             return 10  # Costo para el caso en que el movimiento sea en el eje Y hacia arriba
         elif agent.pos[1] < current_pos[1]:
@@ -32,7 +32,7 @@ def get_cost(agent, current_pos) -> float:
     elif (
         isinstance(agent, RockAgent)
         or isinstance(agent, MetalAgent)
-        or (agent, BorderAgent)
+        or isinstance(agent, BorderAgent)
     ):
         return float("inf")  # Imposible moverse a una celda con roca o metal
     return 1  # Costo por defecto si no hay agentes de terreno (quizás terreno vacío)
@@ -51,8 +51,12 @@ def ucs(start_pos, goal_pos, model) -> list:
     Returns:
         Una lista de posiciones que representa el camino encontrado, o None si no existe camino.
     """
-    # Cola de prioridad para almacenar (costo acumulado, posición actual, camino)
-    queue = [(0, start_pos, [start_pos])]
+    # Cola de prioridad para almacenar (costo acumulado, contador de desempate, posición actual, camino)
+    queue = []
+    counter = 0  # Contador para desempatar en caso de igual costo
+    heapq.heappush(
+        queue, (0, counter, start_pos, [start_pos])
+    )  # Inicialmente añadimos el nodo de inicio
     visited = set()  # Conjunto de nodos visitados
     visited_order = []
     cost_so_far = {start_pos: 0}  # Costo acumulado hasta la celda
@@ -60,7 +64,7 @@ def ucs(start_pos, goal_pos, model) -> list:
 
     while queue:
         # Sacar el nodo con el menor costo acumulado
-        current_cost, current_pos, path = heapq.heappop(queue)
+        current_cost, _, current_pos, path = heapq.heappop(queue)
 
         if current_pos in visited:
             continue  # Saltamos si ya fue visitado
@@ -90,9 +94,13 @@ def ucs(start_pos, goal_pos, model) -> list:
                 # Si la celda es transitable (sin obstáculos insalvables)
                 if move_cost < float("inf"):
                     new_cost = current_cost + move_cost
-                    # No sobrescribimos priority, mantenemos la prioridad original
+                    # Si no hemos visitado este vecino antes o hemos encontrado un camino más barato
                     if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                         cost_so_far[neighbor] = new_cost
-                        heapq.heappush(queue, (new_cost, neighbor, path + [neighbor]))
+                        counter += 1  # Incrementamos el contador para desempatar
+                        # Insertamos el nuevo nodo en la cola, con el contador como criterio de desempate
+                        heapq.heappush(
+                            queue, (new_cost, counter, neighbor, path + [neighbor])
+                        )
 
     return None, visited_order  # Si no se encuentra un camino

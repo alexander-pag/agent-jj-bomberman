@@ -1,7 +1,14 @@
 from mesa import Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
-from agents import BombermanAgent, GrassAgent, MetalAgent, RockAgent, BorderAgent
+from agents import (
+    BombermanAgent,
+    GrassAgent,
+    MetalAgent,
+    RockAgent,
+    BorderAgent,
+    GoalAgent,
+)
 from config.constants import *
 
 
@@ -50,11 +57,7 @@ class BombermanModel(Model):
         """
         for y, row in enumerate(map_data):
             for x, terrain_type in enumerate(row):
-                if (
-                    terrain_type == GRASS
-                    or terrain_type == BOMBERMAN
-                    or terrain_type == GOAL
-                ):
+                if terrain_type == GRASS or terrain_type == BOMBERMAN:
                     cell = GrassAgent((x, y), self)
                 elif terrain_type == ROCK:
                     cell = RockAgent((x, y), self)
@@ -62,6 +65,8 @@ class BombermanModel(Model):
                     cell = MetalAgent((x, y), self)
                 elif terrain_type == BORDER:
                     cell = BorderAgent((x, y), self)
+                elif terrain_type == GOAL:
+                    cell = GoalAgent((x, y), self)
                 else:
                     continue
 

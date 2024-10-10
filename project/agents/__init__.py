@@ -5,6 +5,7 @@ from .bombermanAgent import BombermanAgent
 from .dynamiteAgent import DynamiteAgent
 from .balloonAgent import BalloonAgent
 from .borderAgent import BorderAgent
+from .goalAgent import GoalAgent
 
 __all__ = [
     "GrassAgent",
@@ -14,4 +15,5 @@ __all__ = [
     "DynamiteAgent",
     "BalloonAgent",
     "BorderAgent",
+    "GoalAgent",
 ]
