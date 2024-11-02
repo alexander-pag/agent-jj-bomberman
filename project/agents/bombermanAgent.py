@@ -1,5 +1,5 @@
 from mesa import Agent
-from algorithms import astar_search, bfs, ucs, dfs
+from algorithms import astar_search, bfs, ucs, dfs, beam_search, hill_climbing
 from config.constants import *
 import logging
 
@@ -18,6 +18,8 @@ class BombermanAgent(Agent):
             UCS: ucs,
             BFS: bfs,
             ASTAR: astar_search,
+            BEAM: beam_search,
+            HILL: hill_climbing,
         }
 
     def step(self) -> None:
@@ -45,13 +47,20 @@ class BombermanAgent(Agent):
         algorithm = self.algorithms.get(self.model.search_algorithm)
 
         logger.info(
-            f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}"
+            f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
         )
 
         if algorithm:
-            if self.model.search_algorithm == ASTAR:
+            if (
+                self.model.search_algorithm == ASTAR
+                or self.model.search_algorithm == BEAM
+                or self.model.search_algorithm == HILL
+            ):
                 self.path, visited_order = algorithm(
-                    self.pos, self.goal, self.model, self.model.heuristic
+                    self.pos,
+                    self.goal,
+                    self.model,
+                    self.model.heuristic,
                 )
             else:
                 self.path, visited_order = algorithm(self.pos, self.goal, self.model)

@@ -13,6 +13,8 @@ BFS = "Búsqueda por anchura"
 DFS = "Búsqueda por profundidad"
 UCS = "Búsqueda por costo uniforme"
 ASTAR = "Búsqueda A*"
+BEAM = "Búsqueda Beam Search"
+HILL = "Búsqueda Hill Climbing"
 
 # Representación de los agentes en el mapa
 GRASS = "C"
@@ -34,7 +36,8 @@ IMG_ROCK = "project/assets/images/terrain/wall1.png"
 IMG_BORDER = "project/assets/images/terrain/border.png"
 IMG_METAL = "project/assets/images/terrain/metal.png"
 IMG_GOAL = "project/assets/images/terrain/goal.png"
-IMG_GROUND = "project/assets/images/terrain/ground1.png"
+IMG_GROUND = ("project/assets/images/terrain/ground1.png",)
+IMG_BALLOON = "project/assets/images/enemies/balloon/balloon.png"
 
 # Rutas de los mapas
 MAP_5X5 = "project/assets/maps/5x5.txt"
@@ -45,7 +48,7 @@ MAP_20X20_2 = "project/assets/maps/20x20_2.txt"
 MAP_20X20_3 = "project/assets/maps/20x20_3.txt"
 
 # Valores del selector de algoritmos
-ALGORITHMS = [BFS, DFS, UCS, ASTAR]
+ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL]
 
 # Títulos para los selectores
 ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"

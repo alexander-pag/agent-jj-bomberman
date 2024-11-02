@@ -2,7 +2,7 @@ from .grassAgent import GrassAgent
 from .metalAgent import MetalAgent
 from .rockAgent import RockAgent
 from .bombermanAgent import BombermanAgent
-from .dynamiteAgent import DynamiteAgent
+from .bombAgent import BombAgent
 from .balloonAgent import BalloonAgent
 from .borderAgent import BorderAgent
 from .goalAgent import GoalAgent
@@ -12,7 +12,7 @@ __all__ = [
     "MetalAgent",
     "RockAgent",
     "BombermanAgent",
-    "DynamiteAgent",
+    "BombAgent",
     "BalloonAgent",
     "BorderAgent",
     "GoalAgent",

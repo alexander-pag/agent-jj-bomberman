@@ -4,6 +4,10 @@ from config.constants import BOMBERMAN, GOAL
 
 def load_map_from_file(file_path):
     map_data = read_map_from_file(file_path)
+
+    # Invertir el mapa
+    map_data = map_data[::-1]
+
     pos_bomberman, pos_goal = get_special_positions(map_data)
     width = len(map_data[0])
     height = len(map_data)

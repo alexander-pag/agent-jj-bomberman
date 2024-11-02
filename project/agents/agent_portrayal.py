@@ -5,6 +5,7 @@ from agents import (
     RockAgent,
     BorderAgent,
     GoalAgent,
+    BalloonAgent,
 )
 from helpers.file_reader import get_image_path
 from config.constants import (
@@ -15,6 +16,7 @@ from config.constants import (
     IMG_BOMBERMAN,
     IMG_BORDER,
     IMG_GOAL,
+    IMG_BALLOON,
 )
 
 
@@ -40,6 +42,9 @@ def agent_portrayal(agent) -> dict:
         return border_portrayal()
     elif isinstance(agent, GoalAgent):
         return goal_portrayal()
+    elif isinstance(agent, BalloonAgent):
+        portrayal["Shape"] = get_image_path(IMG_BALLOON)
+        portrayal["Layer"] = 2
     elif isinstance(agent, BombermanAgent):
         portrayal["Shape"] = get_image_path(IMG_BOMBERMAN)
         portrayal["Layer"] = 1

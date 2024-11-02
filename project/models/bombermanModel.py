@@ -8,6 +8,7 @@ from agents import (
     RockAgent,
     BorderAgent,
     GoalAgent,
+    BalloonAgent,
 )
 from config.constants import *
 
@@ -45,6 +46,11 @@ class BombermanModel(Model):
 
         self.schedule.add(self.bomberman)
 
+        for i in range(1):
+            balloon = BalloonAgent(i + 2, self)
+            self.grid.place_agent(balloon, balloon.pos)
+            self.schedule.add(balloon)
+
     def create_map(self, map_data) -> None:
         """
         Crea el mapa del modelo a partir de los datos leídos de un archivo de texto.
@@ -76,3 +82,29 @@ class BombermanModel(Model):
 
     def step(self):
         self.schedule.step()
+
+    def throw_bomb(self, current_pos, target_pos):
+        """
+        Destruye una roca en la posición de destino y reemplaza su celda con césped (GrassAgent).
+        """
+        cell_contents = self.grid.get_cell_list_contents(target_pos)
+        rock_found = any(isinstance(agent, RockAgent) for agent in cell_contents)
+
+        if rock_found:
+            # Eliminar el agente Rock de la posición de destino
+            for agent in cell_contents:
+                if isinstance(agent, RockAgent):
+                    self.grid.remove_agent(agent)
+                    break  # Solo debería haber un RockAgent, así que rompemos el ciclo
+
+            # Crear un nuevo agente de tipo Grass y colocarlo en la posición de destino
+            grass_agent = GrassAgent(target_pos, self)
+            self.grid.place_agent(grass_agent, target_pos)
+            self.schedule.add(grass_agent)  # Agregar el nuevo agente a la agenda
+
+            print(f"Roca en {target_pos} destruida. Celda actualizada a césped.")
+        else:
+            print("No hay roca para destruir en esta posición.")
+
+    def next_id(self) -> int:
+        return super().next_id()
