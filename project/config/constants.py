@@ -38,6 +38,7 @@ IMG_METAL = "project/assets/images/terrain/metal.png"
 IMG_GOAL = "project/assets/images/terrain/goal.png"
 IMG_GROUND = ("project/assets/images/terrain/ground1.png",)
 IMG_BALLOON = "project/assets/images/enemies/balloon/balloon.png"
+IMG_BOMB = "project/assets/images/items/dynamite.png"
 
 # Rutas de los mapas
 MAP_5X5 = "project/assets/maps/5x5.txt"

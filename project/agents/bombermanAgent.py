@@ -43,19 +43,10 @@ class BombermanAgent(Agent):
             self.follow_path()
 
     def calculate_path(self) -> None:
-        """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""
         algorithm = self.algorithms.get(self.model.search_algorithm)
 
-        logger.info(
-            f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
-        )
-
         if algorithm:
-            if (
-                self.model.search_algorithm == ASTAR
-                or self.model.search_algorithm == BEAM
-                or self.model.search_algorithm == HILL
-            ):
+            if self.model.search_algorithm in [ASTAR, BEAM, HILL]:
                 self.path, visited_order = algorithm(
                     self.pos,
                     self.goal,
@@ -63,24 +54,44 @@ class BombermanAgent(Agent):
                     self.model.heuristic,
                 )
             else:
-                self.path, visited_order = algorithm(self.pos, self.goal, self.model)
+                self.path, visited_order, rocks = algorithm(self.pos, self.goal, self.model)
 
-            if self.path is None:
-                logger.warning(
-                    f"No se encontró un camino desde {self.pos} hasta {self.goal}"
-                )
+            logger.info(f"Posición actual: {self.pos}")
+            logger.info(f"Posición objetivo: {self.goal}")
+            logger.info(f"Posiciones visitadas: {visited_order}")
+            
+            if rocks:
+                rock_pos = rocks[0]
+                logger.info(f"Roca detectada en: {rock_pos}")
+                
+                # Verificar si ya estamos adyacentes a la roca
+                if self.is_adjacent(self.pos, rock_pos):
+                    logger.info(f"Adyacente a roca en {rock_pos}, detonando bomba")
+                    self.model.throw_bomb(self.pos, rock_pos)
+                    return self.calculate_path()
+                
+                # Si no estamos adyacentes, calcular camino hacia la roca
+                path_to_rock, _, _ = algorithm(self.pos, rock_pos, self.model)
+                if path_to_rock:
+                    logger.info(f"Camino hacia la roca: {path_to_rock}")
+                    self.path = path_to_rock[:-1]
+                    return
+                
             else:
-                # Guardar el orden en que se visitaron los nodos
-                self.model.visited_cells = [
-                    (pos, idx + 1) for idx, pos in enumerate(visited_order)
-                ]
+                if self.path:
+                    self.model.visited_cells = [
+                        (pos, idx + 1) for idx, pos in enumerate(visited_order)
+                    ]
+                    self.model.final_path_cells = set(self.path)
+                else:
+                    logger.error("No se encontró camino y no hay rocas para destruir")
+                    return None
 
-                # Guardar las celdas que son parte del camino final
-                self.model.final_path_cells = set(self.path)
-        else:
-            logger.error(
-                f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
-            )
+    def is_adjacent(self, pos1, pos2):
+        """Verifica si dos posiciones son adyacentes"""
+        x1, y1 = pos1
+        x2, y2 = pos2
+        return abs(x1 - x2) + abs(y1 - y2) == 1
 
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""

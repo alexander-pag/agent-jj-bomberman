@@ -3,6 +3,7 @@ from mesa import Agent
 from .metalAgent import MetalAgent
 from .rockAgent import RockAgent
 from .borderAgent import BorderAgent
+from .bombermanAgent import BombermanAgent
 
 
 class BalloonAgent(Agent):
@@ -30,6 +31,8 @@ class BalloonAgent(Agent):
         if not self.is_obstacle(new_position):
             print("moviendo globo a: ", new_position)
             self.model.grid.move_agent(self, new_position)
+            self.pos = new_position
+            self.detect_bomberman()
 
     def is_obstacle(self, pos):
         cellmates = self.model.grid.get_cell_list_contents([pos])
@@ -41,3 +44,12 @@ class BalloonAgent(Agent):
             ):
                 return True
         return False
+
+    # detectar si hay un bomberman en la misma posición que el globo y terminar la simulación
+    def detect_bomberman(self):
+        cellmates = self.model.grid.get_cell_list_contents([self.pos])
+        for agent in cellmates:
+            if isinstance(agent, BombermanAgent):
+                print("¡Bomberman ha sido capturado!")
+                self.model.running = False
+                break

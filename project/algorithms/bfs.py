@@ -30,7 +30,9 @@ def bfs(start_pos, goal_pos, model):
     visited_order = []
 
     # Conjunto para evitar volver a visitar las mismas celdas
-    visited = set()
+    visited = {start_pos}
+    
+    rocks_found = []  # Nueva lista para rocas
 
     # Obtener la prioridad seleccionada
     priority = model.priority
@@ -46,9 +48,6 @@ def bfs(start_pos, goal_pos, model):
         if current_pos == goal_pos:
             return path, visited_order
 
-        # Marcar la celda actual como visitada
-        visited.add(current_pos)
-
         # Obtener las celdas vecinas ortogonalmente (sin diagonales, sin incluir el centro)
         neighbors = model.grid.get_neighborhood(
             current_pos, moore=False, include_center=False
@@ -62,8 +61,14 @@ def bfs(start_pos, goal_pos, model):
             if neighbor not in visited:
                 # Verificar que la celda no esté ocupada por obstáculos
                 cellmates = model.grid.get_cell_list_contents([neighbor])
+                
+                # Verificar si hay roca y registrarla
+                if any(isinstance(agent, RockAgent) for agent in cellmates):
+                    rocks_found.append(neighbor)
+                    continue
+                
                 if not any(
-                    isinstance(agent, (MetalAgent, RockAgent, BorderAgent))
+                    isinstance(agent, (MetalAgent,RockAgent, BorderAgent))
                     for agent in cellmates
                 ):
                     # Agregar el vecino a la cola con el camino actualizado
@@ -71,4 +76,5 @@ def bfs(start_pos, goal_pos, model):
                     visited.add(neighbor)  # Marcar el vecino como visitado
 
     # Si no se encontró un camino, retornamos None para el camino y el orden de visita
-    return None, visited_order
+    logger.info(f"Rocks found during BFS: {rocks_found}")
+    return None, visited_order, rocks_found

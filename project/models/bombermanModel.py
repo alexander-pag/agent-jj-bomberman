@@ -84,27 +84,30 @@ class BombermanModel(Model):
         self.schedule.step()
 
     def throw_bomb(self, current_pos, target_pos):
-        """
-        Destruye una roca en la posición de destino y reemplaza su celda con césped (GrassAgent).
-        """
+        """Destruye una roca y muestra animación de bomba"""
         cell_contents = self.grid.get_cell_list_contents(target_pos)
         rock_found = any(isinstance(agent, RockAgent) for agent in cell_contents)
 
         if rock_found:
-            # Eliminar el agente Rock de la posición de destino
+            # Primero remover la roca
             for agent in cell_contents:
                 if isinstance(agent, RockAgent):
                     self.grid.remove_agent(agent)
-                    break  # Solo debería haber un RockAgent, así que rompemos el ciclo
-
-            # Crear un nuevo agente de tipo Grass y colocarlo en la posición de destino
+                    break
+            from agents import BombAgent
+            # Crear y colocar bomba en la posición del objetivo
+            bomb = BombAgent(self.next_id(), self, target_pos)
+            self.grid.place_agent(bomb, target_pos)
+            
+            # Crear césped después de un breve delay
             grass_agent = GrassAgent(target_pos, self)
             self.grid.place_agent(grass_agent, target_pos)
-            self.schedule.add(grass_agent)  # Agregar el nuevo agente a la agenda
+            self.schedule.add(grass_agent)
 
-            print(f"Roca en {target_pos} destruida. Celda actualizada a césped.")
-        else:
-            print("No hay roca para destruir en esta posición.")
+            # La bomba debe aparecer en una capa superior
+            return bomb  # Retornamos la bomba para poder eliminarla después
 
     def next_id(self) -> int:
         return super().next_id()
+
+
