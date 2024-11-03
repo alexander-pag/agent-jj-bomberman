@@ -31,7 +31,7 @@ def bfs(start_pos, goal_pos, model):
 
     # Conjunto para evitar volver a visitar las mismas celdas
     visited = {start_pos}
-    
+
     rocks_found = []  # Nueva lista para rocas
 
     # Obtener la prioridad seleccionada
@@ -46,7 +46,8 @@ def bfs(start_pos, goal_pos, model):
 
         # Si llegamos a la posición objetivo, retornamos el camino y el orden de visita
         if current_pos == goal_pos:
-            return path, visited_order
+            # logger.info(f"La ruta encontrada por BFS es: {path}")
+            return path, visited_order, rocks_found
 
         # Obtener las celdas vecinas ortogonalmente (sin diagonales, sin incluir el centro)
         neighbors = model.grid.get_neighborhood(
@@ -59,22 +60,23 @@ def bfs(start_pos, goal_pos, model):
         for neighbor in neighbors:
             # Si el vecino no ha sido visitado antes
             if neighbor not in visited:
-                # Verificar que la celda no esté ocupada por obstáculos
+                # Verificar el contenido de la celda vecina
                 cellmates = model.grid.get_cell_list_contents([neighbor])
-                
+
                 # Verificar si hay roca y registrarla
                 if any(isinstance(agent, RockAgent) for agent in cellmates):
                     rocks_found.append(neighbor)
-                    continue
-                
+                    # Continuamos, ya que podemos considerar esta ruta
+                    # sin bloquear el camino en sí
+
+                # Verificamos que no haya obstáculos que bloqueen el paso
                 if not any(
-                    isinstance(agent, (MetalAgent,RockAgent, BorderAgent))
-                    for agent in cellmates
+                    isinstance(agent, (MetalAgent, BorderAgent)) for agent in cellmates
                 ):
                     # Agregar el vecino a la cola con el camino actualizado
                     queue.append((neighbor, path + [neighbor]))
                     visited.add(neighbor)  # Marcar el vecino como visitado
 
     # Si no se encontró un camino, retornamos None para el camino y el orden de visita
-    logger.info(f"Rocks found during BFS: {rocks_found}")
+    # logger.info(f"Rocks found during BFS: {rocks_found}")
     return None, visited_order, rocks_found

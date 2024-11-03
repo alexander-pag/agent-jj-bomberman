@@ -6,7 +6,7 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
-    BombAgent
+    BombAgent,
 )
 from helpers.file_reader import get_image_path
 from config.constants import (
@@ -18,7 +18,7 @@ from config.constants import (
     IMG_BORDER,
     IMG_GOAL,
     IMG_BALLOON,
-    IMG_BOMB
+    IMG_BOMB,
 )
 
 
@@ -32,7 +32,7 @@ def agent_portrayal(agent) -> dict:
     Returns:
         Diccionario con la configuración de visualización del agente.
     """
-    portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5}
+    portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5, "Layer": 0}
 
     if isinstance(agent, GrassAgent):
         return grass_portrayal(agent)
@@ -54,6 +54,7 @@ def agent_portrayal(agent) -> dict:
         return bomb_portrayal()
     return portrayal
 
+
 def bomb_portrayal():
     return {
         "Shape": get_image_path(IMG_BOMB),
@@ -61,8 +62,9 @@ def bomb_portrayal():
         "Layer": 1,  # Layer superior para que sea visible sobre otros elementos
         "w": 1,
         "h": 1,
-        "Color": "red"
+        "Color": "red",
     }
+
 
 def grass_portrayal(agent):
     portrayal = {

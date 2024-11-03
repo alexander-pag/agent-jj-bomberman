@@ -2,6 +2,9 @@ from mesa import Agent
 from algorithms import astar_search, bfs, ucs, dfs, beam_search, hill_climbing
 from config.constants import *
 import logging
+from agents.rockAgent import RockAgent
+from agents.bombAgent import BombAgent
+from agents.explosionAgent import ExplosionAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,6 +16,10 @@ class BombermanAgent(Agent):
         self.pos = start_pos
         self.path = None
         self.goal = model.pos_goal
+        self.history = []
+        self.rocks = []
+        self.retreat_steps = []
+        self.waiting_for_explosion = False
         self.algorithms = {
             DFS: dfs,
             UCS: ucs,
@@ -43,10 +50,19 @@ class BombermanAgent(Agent):
             self.follow_path()
 
     def calculate_path(self) -> None:
+        """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""
         algorithm = self.algorithms.get(self.model.search_algorithm)
 
+        logger.info(
+            f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
+        )
+
         if algorithm:
-            if self.model.search_algorithm in [ASTAR, BEAM, HILL]:
+            if (
+                self.model.search_algorithm == ASTAR
+                or self.model.search_algorithm == BEAM
+                or self.model.search_algorithm == HILL
+            ):
                 self.path, visited_order = algorithm(
                     self.pos,
                     self.goal,
@@ -54,49 +70,40 @@ class BombermanAgent(Agent):
                     self.model.heuristic,
                 )
             else:
-                self.path, visited_order, rocks = algorithm(self.pos, self.goal, self.model)
+                self.path, visited_order, self.rocks = algorithm(
+                    self.pos, self.goal, self.model
+                )
 
-            logger.info(f"Posición actual: {self.pos}")
-            logger.info(f"Posición objetivo: {self.goal}")
-            logger.info(f"Posiciones visitadas: {visited_order}")
-            
-            if rocks:
-                rock_pos = rocks[0]
-                logger.info(f"Roca detectada en: {rock_pos}")
-                
-                # Verificar si ya estamos adyacentes a la roca
-                if self.is_adjacent(self.pos, rock_pos):
-                    logger.info(f"Adyacente a roca en {rock_pos}, detonando bomba")
-                    self.model.throw_bomb(self.pos, rock_pos)
-                    return self.calculate_path()
-                
-                # Si no estamos adyacentes, calcular camino hacia la roca
-                path_to_rock, _, _ = algorithm(self.pos, rock_pos, self.model)
-                if path_to_rock:
-                    logger.info(f"Camino hacia la roca: {path_to_rock}")
-                    self.path = path_to_rock[:-1]
-                    return
-                
+            print("las rocas son: ", self.rocks)
+
+            if self.path is None:
+                logger.warning(
+                    f"No se encontró un camino desde {self.pos} hasta {self.goal}"
+                )
             else:
-                if self.path:
-                    self.model.visited_cells = [
-                        (pos, idx + 1) for idx, pos in enumerate(visited_order)
-                    ]
-                    self.model.final_path_cells = set(self.path)
-                else:
-                    logger.error("No se encontró camino y no hay rocas para destruir")
-                    return None
+                # Guardar el orden en que se visitaron los nodos
+                self.model.visited_cells = [
+                    (pos, idx + 1) for idx, pos in enumerate(visited_order)
+                ]
 
-    def is_adjacent(self, pos1, pos2):
-        """Verifica si dos posiciones son adyacentes"""
-        x1, y1 = pos1
-        x2, y2 = pos2
-        return abs(x1 - x2) + abs(y1 - y2) == 1
+                # Guardar las celdas que son parte del camino final
+                self.model.final_path_cells = set(self.path)
+        else:
+            logger.error(
+                f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
+            )
 
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
         if self.path:
             next_step = self.path.pop(0)
+            previus_pos = self.pos
+
+            # si la siguiente posición es una roca plantar bomba
+            if self.is_rock(next_step):
+                bomb_agent = BombAgent(self.model.next_id(), self.model, 1, previus_pos)
+                self.model.grid.place_agent(bomb_agent, previus_pos)
+                self.model.schedule.step()
 
             self.model.grid.move_agent(self, next_step)
             self.pos = next_step
@@ -110,3 +117,48 @@ class BombermanAgent(Agent):
 
         if self.verify_exit():
             self.model.running = False
+
+    def is_rock(self, pos):
+        """
+        Verifica si en la posición pos hay una roca.
+        """
+        agents = self.model.grid.get_cell_list_contents([pos])
+        return any(isinstance(agent, RockAgent) for agent in agents)
+
+    def place_bomb(self, next_position):
+        self.rocks.remove(next_position)
+        bomb_agent = BombAgent(
+            self.model.schedule.get_agent_count(), self.model, 1, self.pos
+        )
+        self.model.schedule.add(bomb_agent)
+        self.model.grid.place_agent(bomb_agent, self.pos)
+        self.waiting_for_explosion = True
+
+        # Genera los pasos de retroceso en función del cooldown de la bomba usando el historial.
+        cooldown_steps = bomb_agent.cooldown
+        if len(self.history) >= cooldown_steps:
+            # Toma las últimas posiciones recorridas para retroceder.
+            self.retreat_steps = self.history[-cooldown_steps:]
+            self.retreat_steps.reverse()  # Asegura que retroceda en el orden correcto.
+            # Limpia el historial para evitar un retroceso innecesario en futuros pasos.
+            self.history = self.history[:-cooldown_steps]
+        else:
+            self.retreat_steps = self.history[
+                ::-1
+            ]  # Retrocede todas las posiciones si no hay suficientes.
+            self.history = []
+
+    def check_explosion_status(self):
+        bombs = [
+            agent
+            for agent in self.model.schedule.agents
+            if isinstance(agent, BombAgent)
+        ]
+        explosions = [
+            agent
+            for agent in self.model.schedule.agents
+            if isinstance(agent, ExplosionAgent)
+        ]
+        if not bombs and not explosions and self.waiting_for_explosion:
+            print("Bomba explotó, comenzando regreso al punto de la bomba.")
+            self.waiting_for_explosion = False

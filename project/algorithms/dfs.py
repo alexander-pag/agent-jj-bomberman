@@ -21,7 +21,7 @@ def dfs(start, goal, model) -> list:
 
     from agents import RockAgent, MetalAgent, BorderAgent
 
-    def is_valid_move(pos) -> bool:
+    def is_valid_move(pos, rocks) -> bool:
         """
         Verifica si un movimiento es válido, es decir, si la posición resultante
         está dentro de los límites del grid y si la celda está libre de obstáculos.
@@ -39,8 +39,12 @@ def dfs(start, goal, model) -> list:
         # Revisar si la celda está libre de obstáculos
         cell_contents = model.grid.get_cell_list_contents([pos])
         for agent in cell_contents:
-            if isinstance(agent, (RockAgent, MetalAgent, BorderAgent)):
+            if isinstance(agent, (MetalAgent, BorderAgent)):
                 return False
+            if isinstance(agent, RockAgent):
+                # sin rocas repetidas
+                if agent.pos not in rocks:
+                    rocks.append(agent.pos)
         return True
 
     # Pila para el recorrido DFS (almacena los nodos a visitar y el camino recorrido hasta ahora)
@@ -55,6 +59,8 @@ def dfs(start, goal, model) -> list:
     # Prioridad de exploración
     priority = model.priority
 
+    rocks_found = []  # Nueva lista para rocas
+
     while stack:
         current, path = stack.pop()
 
@@ -62,7 +68,7 @@ def dfs(start, goal, model) -> list:
 
         # Si hemos alcanzado el objetivo, devolvemos el camino
         if current == goal:
-            return path, visited_order
+            return path, visited_order, rocks_found
 
         if current not in visited:
             visited.add(current)
@@ -79,7 +85,7 @@ def dfs(start, goal, model) -> list:
             # para asegurarnos de que el vecino de mayor prioridad se explore primero
             for neighbor in reversed(ordered_neighbors):
                 # Verificar si el movimiento es válido y si no hemos visitado ya el vecino
-                if is_valid_move(neighbor) and neighbor not in visited:
+                if is_valid_move(neighbor, rocks_found) and neighbor not in visited:
                     stack.append((neighbor, path + [neighbor]))
 
     return None, visited_order
