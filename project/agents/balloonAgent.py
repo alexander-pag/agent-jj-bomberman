@@ -41,6 +41,7 @@ class BalloonAgent(Agent):
                 isinstance(agent, BorderAgent)
                 or isinstance(agent, RockAgent)
                 or isinstance(agent, MetalAgent)
+                or isinstance(agent, BalloonAgent)
             ):
                 return True
         return False

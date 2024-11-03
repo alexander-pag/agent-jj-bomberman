@@ -25,6 +25,7 @@ class BombermanModel(Model):
         search_algorithm,
         priority,
         heuristic,
+        balloons
     ):
         super().__init__()
         self.num_agents = number_of_agents
@@ -37,6 +38,7 @@ class BombermanModel(Model):
         self.schedule = RandomActivation(self)
         self.running = True
         self.priority = priority
+        self.balloons = balloons
         self.pos_goal = pos_goal
         self.create_map(map_data)
 
@@ -46,7 +48,7 @@ class BombermanModel(Model):
 
         self.schedule.add(self.bomberman)
 
-        for i in range(1):
+        for i in range(self.balloons):
             balloon = BalloonAgent(i + 2, self)
             self.grid.place_agent(balloon, balloon.pos)
             self.schedule.add(balloon)
@@ -80,8 +82,19 @@ class BombermanModel(Model):
                 self.grid.place_agent(cell, (x, y))
                 self.schedule.add(cell)
 
-    def step(self):
+    def step(self) -> None:
         self.schedule.step()
+
+        agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
+        
+        for a in agents_in_cell:
+            if isinstance(a, BalloonAgent):
+                print("Bomberman ha sido derrotado")
+                self.running = False
+        
+        # Verificar si Bomberman ha llegado a la salida
+        if self.bomberman.pos == self.pos_goal:
+            self.running = False
 
     def throw_bomb(self, current_pos, target_pos):
         """Destruye una roca y muestra animación de bomba"""

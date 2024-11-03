@@ -30,6 +30,7 @@ def astar_search(start, goal, model, heuristic) -> list:
     heapq.heappush(open_set, (0, start))
     came_from = {}
     visited_order = []
+    rocks_found = []  # Nueva lista para rocas
     g_score = {start: 0}
     f_score = {start: heuristic_manhattan_euclidean(start, goal)}
 
@@ -47,7 +48,7 @@ def astar_search(start, goal, model, heuristic) -> list:
             path.append(start)
             path.reverse()
             print(f"Path found: {path}")
-            return path, visited_order
+            return path, visited_order, rocks_found
 
         # Obtener los vecinos ortogonales
         neighbors = model.grid.get_neighborhood(
@@ -68,7 +69,11 @@ def astar_search(start, goal, model, heuristic) -> list:
             if any(isinstance(agent, (MetalAgent)) for agent in cell_contents):
                 continue
 
-            if any(isinstance(agent, (RockAgent)) for agent in cell_contents):
+            # Verificar si hay roca y registrarla
+            if any(isinstance(agent, RockAgent) for agent in cell_contents):
+                rocks_found.append(neighbor)
+                # Continuamos, ya que podemos considerar esta ruta
+                # sin bloquear el camino en sí
                 continue
 
             if any(isinstance(agent, (BorderAgent)) for agent in cell_contents):
@@ -83,4 +88,4 @@ def astar_search(start, goal, model, heuristic) -> list:
                 )
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
-    return None, visited_order
+    return None, visited_order, rocks_found

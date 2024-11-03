@@ -17,6 +17,8 @@ from config.constants import (
     HEURISTICS,
     PRIORITY_SELECTOR_TITLE,
     PRIORITIES,
+    BALLOONS_SELECTOR_TITLE,
+    BALLOONS
 )
 
 
@@ -58,6 +60,11 @@ def run_simulation():
             value=HEURISTICS[0],
             choices=HEURISTICS,
         ),
+        "balloons": Choice(
+            name=BALLOONS_SELECTOR_TITLE,
+            value=BALLOONS[0],
+            choices=BALLOONS,
+        )
     }
 
     # Configurar el servidor para visualizar la simulación

@@ -38,7 +38,8 @@ IMG_METAL = "project/assets/images/terrain/metal.png"
 IMG_GOAL = "project/assets/images/terrain/goal.png"
 IMG_GROUND = ("project/assets/images/terrain/ground1.png",)
 IMG_BALLOON = "project/assets/images/enemies/balloon/balloon.png"
-IMG_BOMB = "project/assets/images/items/dynamite.png"
+IMG_BOMB = "project/assets/images/items/bomb.png"
+IMG_EXPLOSION = "project/assets/images/items/explosion.png"
 
 # Rutas de los mapas
 MAP_5X5 = "project/assets/maps/5x5.txt"
@@ -56,9 +57,13 @@ ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"
 MAP_SELECTOR_TITLE = "Mapa"
 HEURISTIC_SELECTOR_TITLE = "Heurística"
 PRIORITY_SELECTOR_TITLE = "Prioridad"
+BALLOONS_SELECTOR_TITLE = "Número de enemigos"
 
 # Valores del selector de heurísticas
 HEURISTICS = ["Manhattan", "Euclidean"]
+
+# Valores del selector de enemigos
+BALLOONS = [1,2,3,4,5,6,7,8,9,10]
 
 # Valores del selector de prioridades
 PRIORITIES = [

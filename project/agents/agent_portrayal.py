@@ -6,8 +6,9 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
-    BombAgent,
+    BombAgent
 )
+from agents.explosionAgent import ExplosionAgent
 from helpers.file_reader import get_image_path
 from config.constants import (
     IMG_GRASS,
@@ -19,19 +20,11 @@ from config.constants import (
     IMG_GOAL,
     IMG_BALLOON,
     IMG_BOMB,
+    IMG_EXPLOSION
 )
 
-
 def agent_portrayal(agent) -> dict:
-    """
-    Define cómo se visualizarán los agentes en la simulación.
-
-    Args:
-        agent: Agente a visualizar.
-
-    Returns:
-        Diccionario con la configuración de visualización del agente.
-    """
+    """Define cómo se visualizarán los agentes en la simulación."""
     portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5, "Layer": 0}
 
     if isinstance(agent, GrassAgent):
@@ -52,18 +45,30 @@ def agent_portrayal(agent) -> dict:
         portrayal["Layer"] = 2
     elif isinstance(agent, BombAgent):
         return bomb_portrayal()
+    elif isinstance(agent, ExplosionAgent):
+        return explosion_portrayal()
     return portrayal
 
+def explosion_portrayal():
+    """Define la visualización de la explosión."""
+    return {
+        "Shape": get_image_path(IMG_EXPLOSION),
+        "Filled": "true",
+        "Layer": 3,  # Layer más alto para que aparezca sobre otros elementos
+        "w": 1,
+        "h": 1,
+        "scale": 1.0
+    }
 
 def bomb_portrayal():
     return {
         "Shape": get_image_path(IMG_BOMB),
         "Filled": "true",
-        "Layer": 1,  # Layer superior para que sea visible sobre otros elementos
-        "w": 1,
-        "h": 1,
+        "Layer": 1,
+        "scale": 0.7,  # Prueba distintos valores para ajustar el tamaño
         "Color": "red",
     }
+
 
 
 def grass_portrayal(agent):
