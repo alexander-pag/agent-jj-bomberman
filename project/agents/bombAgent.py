@@ -14,7 +14,7 @@ class BombAgent(Agent):
     def __init__(self, unique_id, model, power, pos):
         super().__init__(unique_id, model)
         self.power = power
-        self.cooldown = 3
+        self.cooldown = 2
         self.pos = pos
 
     def step(self):

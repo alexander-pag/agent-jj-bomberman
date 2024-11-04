@@ -72,9 +72,6 @@ def astar_search(start, goal, model, heuristic) -> list:
             # Verificar si hay roca y registrarla
             if any(isinstance(agent, RockAgent) for agent in cell_contents):
                 rocks_found.append(neighbor)
-                # Continuamos, ya que podemos considerar esta ruta
-                # sin bloquear el camino en sí
-                continue
 
             if any(isinstance(agent, (BorderAgent)) for agent in cell_contents):
                 continue
