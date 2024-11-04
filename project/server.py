@@ -18,7 +18,7 @@ from config.constants import (
     PRIORITY_SELECTOR_TITLE,
     PRIORITIES,
     BALLOONS_SELECTOR_TITLE,
-    BALLOONS
+    BALLOONS,
 )
 
 
@@ -64,7 +64,7 @@ def run_simulation():
             name=BALLOONS_SELECTOR_TITLE,
             value=BALLOONS[0],
             choices=BALLOONS,
-        )
+        ),
     }
 
     # Configurar el servidor para visualizar la simulación

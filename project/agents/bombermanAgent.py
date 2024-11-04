@@ -33,7 +33,7 @@ class BombermanAgent(Agent):
     def step(self) -> None:
         """Realiza un paso en la simulación."""
         self.time_steps += 1
-        
+
         if self.waiting_for_explosion:
             # Verificar si hay que retroceder
             if self.retreat_steps:
@@ -71,9 +71,11 @@ class BombermanAgent(Agent):
 
         if algorithm:
             # Llama al algoritmo y captura el resultado
-            result = algorithm(self.pos, self.goal, self.model, self.model.heuristic) \
-                    if self.model.search_algorithm in (ASTAR, BEAM, HILL) \
-                    else algorithm(self.pos, self.goal, self.model)
+            result = (
+                algorithm(self.pos, self.goal, self.model, self.model.heuristic)
+                if self.model.search_algorithm in (ASTAR, BEAM, HILL)
+                else algorithm(self.pos, self.goal, self.model)
+            )
 
             # Verifica el número de valores retornados
             if len(result) == 3:
@@ -82,7 +84,9 @@ class BombermanAgent(Agent):
                 self.path, visited_order = result
                 self.rocks = []  # Inicializa rocks si no se devolvió
             else:
-                logger.error(f"El algoritmo {self.model.search_algorithm} devolvió un número inesperado de valores: {len(result)}")
+                logger.error(
+                    f"El algoritmo {self.model.search_algorithm} devolvió un número inesperado de valores: {len(result)}"
+                )
                 return
 
             print("Las rocas son: ", self.rocks)
@@ -104,14 +108,13 @@ class BombermanAgent(Agent):
                 f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
             )
 
-
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
         if not self.path:
             return
 
         next_step = self.path[0]
-        
+
         # Verificar si hay una roca en la siguiente posición
         if self.is_rock(next_step):
             # Colocar bomba solo si no estamos ya esperando una explosión
@@ -120,7 +123,7 @@ class BombermanAgent(Agent):
                 self.model.grid.place_agent(bomb_agent, self.pos)
                 self.model.schedule.add(bomb_agent)
                 self.waiting_for_explosion = True
-                
+
                 # Calcula pasos de retroceso
                 cooldown_steps = bomb_agent.cooldown
                 if len(self.history) >= cooldown_steps:
@@ -131,17 +134,17 @@ class BombermanAgent(Agent):
                     self.retreat_steps = self.history[::-1]
                     self.history = []
             return
-            
+
         # Si no hay roca o la explosión ya ocurrió, podemos movernos
         if not self.waiting_for_explosion:
             next_step = self.path.pop(0)
             previus_pos = self.pos
-            
+
             self.model.grid.move_agent(self, next_step)
             self.pos = next_step
-            
+
             self.history.append(previus_pos)
-            
+
             if self.pos not in [pos for pos, _ in self.model.visited_cells]:
                 visit_number = len(self.model.visited_cells) + 1
                 self.model.visited_cells.append((self.pos, visit_number))
@@ -164,11 +167,24 @@ class BombermanAgent(Agent):
         Verifica el estado de la explosión y si el muro fue destruido.
         Retorna True si podemos continuar moviéndonos.
         """
-        bombs = [agent for agent in self.model.schedule.agents if isinstance(agent, BombAgent)]
-        explosions = [agent for agent in self.model.schedule.agents if isinstance(agent, ExplosionAgent)]
-        
+        bombs = [
+            agent
+            for agent in self.model.schedule.agents
+            if isinstance(agent, BombAgent)
+        ]
+        explosions = [
+            agent
+            for agent in self.model.schedule.agents
+            if isinstance(agent, ExplosionAgent)
+        ]
+
         # Solo continuamos si no hay bombas ni explosiones activas y hemos terminado de retroceder
-        if not bombs and not explosions and self.waiting_for_explosion and not self.retreat_steps:
+        if (
+            not bombs
+            and not explosions
+            and self.waiting_for_explosion
+            and not self.retreat_steps
+        ):
             print("Explosión completada y retroceso terminado, recalculando ruta")
             return True
         return False
