@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class ExplosionAgent(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-        self.duration = 2  # Duración de la explosión en pasos
+        self.duration = 1  # Duración de la explosión en pasos
 
     def step(self):
         self.duration -= 1
