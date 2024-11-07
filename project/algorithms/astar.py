@@ -39,6 +39,9 @@ def astar_search(start, goal, model, heuristic) -> tuple:
     print(f"La función de costo menos repetida es: {least_repeated_cost}")
     print(f"Las celdas con la función de costo menos repetida son: {celdas_least}")
 
+    print("path with rocks", path_with_rocks[2])
+    print("path without rocks", path_without_rocks[2])
+
     # Calculate costs
     rocks_in_path = []
     if path_with_rocks[0]:
@@ -84,10 +87,17 @@ def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
     visited_order = []
     g_score = {start: 0}
     f_score = {start: heuristic_manhattan_euclidean(start, goal)}
+    visited_by_levels = {}
+    level = {start: 0}
 
     while open_set:
         _, current = heapq.heappop(open_set)
         visited_order.append(current)
+
+        current_level = level[current]
+        if current_level not in visited_by_levels:
+            visited_by_levels[current_level] = []
+        visited_by_levels[current_level].append(current)
 
         if current == goal:
             path = []
@@ -97,7 +107,7 @@ def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
             path.append(start)
             path.reverse()
 
-            return path, visited_order
+            return path, visited_order, visited_by_levels
 
         neighbors = model.grid.get_neighborhood(
             current, moore=False, include_center=False
@@ -132,5 +142,6 @@ def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
                 costos.append((neighbor, f_score[neighbor]))
 
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
+                level[neighbor] = current_level + 1
 
-    return None, visited_order
+    return None, visited_order, visited_by_levels

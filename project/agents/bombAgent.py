@@ -1,5 +1,9 @@
 from mesa import Agent
-from agents import *
+from agents.borderAgent import BorderAgent
+from agents.explosionAgent import ExplosionAgent
+from agents.grassAgent import GrassAgent
+from agents.metalAgent import MetalAgent
+from agents.rockAgent import RockAgent
 import logging
 
 logging.basicConfig(level=logging.INFO)

@@ -2,7 +2,9 @@ from mesa import Agent
 from algorithms import *
 from config.constants import *
 import logging
-from agents import *
+from agents.rockAgent import RockAgent
+from agents.bombAgent import BombAgent
+from agents.explosionAgent import ExplosionAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

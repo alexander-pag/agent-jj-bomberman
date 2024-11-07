@@ -31,6 +31,10 @@ def hill_climbing(start_pos, goal_pos, model, heuristic_type):
         f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n"
     )
 
+    print("Nodos expandidos por niveles:")
+    for lvl, nodes in path_with_rocks[3].items():
+        print(f"Nivel {lvl}: {nodes}")
+
     # Return optimal path
     if cost_with_rocks < cost_without_rocks:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
@@ -53,6 +57,10 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
     path = [start_pos]
     visited_order = [start_pos]
     rocks_found = []  # Lista para almacenar posiciones de rocas encontradas
+    visited_by_levels = {}
+    level = 0
+
+    visited_by_levels[level] = [current_pos]
 
     while current_pos != goal_pos:
         neighbors = model.grid.get_neighborhood(
@@ -140,4 +148,10 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
             path.append(current_pos)
             visited_order.append(current_pos)
 
-    return path, visited_order, rocks_found
+            # Registrar el vecino en el siguiente nivel
+            level += 1
+            if level not in visited_by_levels:
+                visited_by_levels[level] = []
+            visited_by_levels[level].append(current_pos)
+
+    return path, visited_order, rocks_found, visited_by_levels

@@ -1,5 +1,8 @@
 from mesa import Agent
-from agents import *
+from agents.bombermanAgent import BombermanAgent
+from agents.rockAgent import RockAgent
+from agents.metalAgent import MetalAgent
+from agents.borderAgent import BorderAgent
 
 
 class BalloonAgent(Agent):

@@ -7,6 +7,7 @@ from .balloonAgent import BalloonAgent
 from .borderAgent import BorderAgent
 from .goalAgent import GoalAgent
 from .explosionAgent import ExplosionAgent
+from .borderAgent import BorderAgent
 
 __all__ = [
     "GrassAgent",

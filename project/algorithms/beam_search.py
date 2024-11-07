@@ -71,6 +71,9 @@ def beam_search(start_pos, goal_pos, model, heuristic_type, beam_width=4):
         f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n"
     )
 
+    print("path with rocks", path_with_rocks[3])
+    print("path without rocks", path_without_rocks[3])
+
     if cost_with_rocks < cost_without_rocks:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
     return path_without_rocks[0], path_without_rocks[1], []
@@ -90,6 +93,8 @@ def find_path(
     visited = set()
     visited_order = []
     rocks_found = []
+    visited_by_levels = {}
+    level = {start_pos: 0}
 
     while queue:
         next_level = []
@@ -101,8 +106,13 @@ def find_path(
             _, current_pos, path = heapq.heappop(queue)
             visited_order.append(current_pos)
 
+            current_level = level[current_pos]
+            if current_level not in visited_by_levels:
+                visited_by_levels[current_level] = []
+            visited_by_levels[current_level].append(current_pos)
+
             if current_pos == goal_pos:
-                return path, visited_order, rocks_found
+                return path, visited_order, rocks_found, visited_by_levels
 
             if current_pos in visited:
                 continue
@@ -136,8 +146,9 @@ def find_path(
                             neighbor, goal_pos, model, heuristic_type
                         )
                         heapq.heappush(next_level, (h, neighbor, path + [neighbor]))
+                        level[neighbor] = current_level + 1
 
         next_level.sort(key=lambda x: x[0])
         queue = next_level[:beam_width]
 
-    return None, visited_order, rocks_found
+    return None, visited_order, rocks_found, visited_by_levels
