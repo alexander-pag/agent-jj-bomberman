@@ -5,21 +5,7 @@ from services.map_service import load_map_from_file
 from ui.map_selector import select_map
 from agents.agent_portrayal import agent_portrayal
 from models.bombermanModel import BombermanModel
-from config.constants import (
-    ALGORITHMS,
-    ALGORITHM_SELECTOR_TITLE,
-    PROJECT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_GRID_WIDTH,
-    DEFAULT_GRID_HEIGHT,
-    PROJECT_DESCRIPTION,
-    HEURISTIC_SELECTOR_TITLE,
-    HEURISTICS,
-    PRIORITY_SELECTOR_TITLE,
-    PRIORITIES,
-    BALLOONS_SELECTOR_TITLE,
-    BALLOONS,
-)
+from config.constants import *
 
 
 def run_simulation():

@@ -1,50 +1,82 @@
 import heapq
 from config.constants import HEURISTICS
 from helpers.move_by_priority import get_neighbors_by_priority
-import math
+from collections import Counter
+from helpers.calculate_path import *
 
 
-def calculate_path_cost(path, rocks_in_path):
-    """Calculate total cost of path including rock breaking."""
-    ROCK_BREAK_COST = 3  # Cost of placing bomb + retreat + recalculate
-    basic_cost = len(path) if path else float('inf')
-    rock_cost = len(rocks_in_path) * ROCK_BREAK_COST
-    return basic_cost + rock_cost
+costos = []
+
 
 def astar_search(start, goal, model, heuristic) -> tuple:
     """A* search comparing paths with and without rocks."""
-    # Find both paths
-    path_with_rocks = find_path(start, goal, model, heuristic, allow_rocks=True)
-    path_without_rocks = find_path(start, goal, model, heuristic, allow_rocks=False)
     from agents import RockAgent
+
+    global costos
+
+    # Find both paths
+    path_with_rocks = find_path(start, goal, model, heuristic, costos, allow_rocks=True)
+    path_without_rocks = find_path(
+        start, goal, model, heuristic, costos, allow_rocks=False
+    )
+
+    # Eliminar las celdas repetidas
+    costos = list(set(costos))
+
+    # Contar las frecuencias de cada función de costo
+    cost_frequencies = Counter([costo[1] for costo in costos])
+
+    # Obtener los costos más y menos repetidos
+    most_repeated_cost = max(cost_frequencies, key=cost_frequencies.get)
+    least_repeated_cost = min(cost_frequencies, key=cost_frequencies.get)
+
+    # Obtener las celdas asociadas a cada costo
+    celdas_most = [costo[0] for costo in costos if costo[1] == most_repeated_cost]
+    celdas_least = [costo[0] for costo in costos if costo[1] == least_repeated_cost]
+
+    print(f"La función de costo más repetida es: {most_repeated_cost}")
+    print(f"Las celdas con la función de costo más repetida son: {celdas_most}")
+    print(f"La función de costo menos repetida es: {least_repeated_cost}")
+    print(f"Las celdas con la función de costo menos repetida son: {celdas_least}")
+
     # Calculate costs
     rocks_in_path = []
     if path_with_rocks[0]:
-        rocks_in_path = [pos for pos in path_with_rocks[0] if 
-                        any(isinstance(agent, RockAgent) 
-                            for agent in model.grid.get_cell_list_contents([pos]))]
-    
+        rocks_in_path = [
+            pos
+            for pos in path_with_rocks[0]
+            if any(
+                isinstance(agent, RockAgent)
+                for agent in model.grid.get_cell_list_contents([pos])
+            )
+        ]
+
     cost_with_rocks = calculate_path_cost(path_with_rocks[0], rocks_in_path)
     cost_without_rocks = calculate_path_cost(path_without_rocks[0], [])
-    
+
     print("\nComparación de costos:")
-    print(f"Camino con rocas: {cost_with_rocks} pasos (básico: {len(path_with_rocks[0]) if path_with_rocks[0] else 'inf'}, rocas: {len(rocks_in_path)})")
+    print(
+        f"Camino con rocas: {cost_with_rocks} pasos (básico: {len(path_with_rocks[0]) if path_with_rocks[0] else 'inf'}, rocas: {len(rocks_in_path)})"
+    )
     print(f"Camino sin rocas: {cost_without_rocks} pasos")
-    print(f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n")
-    
+    print(
+        f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n"
+    )
+
     # Return optimal path
     if cost_with_rocks < cost_without_rocks:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
     return path_without_rocks[0], path_without_rocks[1], []
 
-def find_path(start, goal, model, heuristic, allow_rocks=False):
+
+def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
     """Helper function to find path with A*."""
     from agents import RockAgent, MetalAgent, BorderAgent
 
     def heuristic_manhattan_euclidean(a, b) -> float:
         if heuristic == HEURISTICS[0]:
-            return abs(a[0] - b[0]) + abs(a[1] - b[1])
-        return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+            return manhattan_distance(a, b)
+        return euclidean_distance(a, b)
 
     open_set = []
     heapq.heappush(open_set, (0, start))
@@ -64,27 +96,41 @@ def find_path(start, goal, model, heuristic, allow_rocks=False):
                 current = came_from[current]
             path.append(start)
             path.reverse()
+
             return path, visited_order
 
-        neighbors = model.grid.get_neighborhood(current, moore=False, include_center=False)
-        ordered_neighbors = get_neighbors_by_priority(neighbors, current, model.priority)
+        neighbors = model.grid.get_neighborhood(
+            current, moore=False, include_center=False
+        )
+        ordered_neighbors = get_neighbors_by_priority(
+            neighbors, current, model.priority
+        )
 
         for neighbor in ordered_neighbors:
             if model.grid.out_of_bounds(neighbor):
                 continue
 
             cell_contents = model.grid.get_cell_list_contents([neighbor])
-            if any(isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents):
-                continue
-                
-            if not allow_rocks and any(isinstance(agent, RockAgent) for agent in cell_contents):
+            if any(
+                isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents
+            ):
                 continue
 
-            tentative_g_score = g_score[current] + 1
+            if not allow_rocks and any(
+                isinstance(agent, RockAgent) for agent in cell_contents
+            ):
+                continue
+
+            tentative_g_score = g_score[current] + 10
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = tentative_g_score + heuristic_manhattan_euclidean(neighbor, goal)
+                f_score[neighbor] = tentative_g_score + heuristic_manhattan_euclidean(
+                    neighbor, goal
+                )
+
+                costos.append((neighbor, f_score[neighbor]))
+
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
     return None, visited_order

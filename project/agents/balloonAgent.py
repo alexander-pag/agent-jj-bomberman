@@ -1,9 +1,5 @@
-import random
 from mesa import Agent
-from .metalAgent import MetalAgent
-from .rockAgent import RockAgent
-from .borderAgent import BorderAgent
-from .bombermanAgent import BombermanAgent
+from agents import *
 
 
 class BalloonAgent(Agent):

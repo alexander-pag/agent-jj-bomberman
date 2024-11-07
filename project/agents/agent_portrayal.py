@@ -1,27 +1,8 @@
-from agents import (
-    BombermanAgent,
-    GrassAgent,
-    MetalAgent,
-    RockAgent,
-    BorderAgent,
-    GoalAgent,
-    BalloonAgent,
-    BombAgent
-)
+from agents import *
 from agents.explosionAgent import ExplosionAgent
 from helpers.file_reader import get_image_path
-from config.constants import (
-    IMG_GRASS,
-    IMG_GROUND,
-    IMG_ROCK,
-    IMG_METAL,
-    IMG_BOMBERMAN,
-    IMG_BORDER,
-    IMG_GOAL,
-    IMG_BALLOON,
-    IMG_BOMB,
-    IMG_EXPLOSION
-)
+from config.constants import *
+
 
 def agent_portrayal(agent) -> dict:
     """Define cómo se visualizarán los agentes en la simulación."""
@@ -49,6 +30,7 @@ def agent_portrayal(agent) -> dict:
         return explosion_portrayal()
     return portrayal
 
+
 def explosion_portrayal():
     """Define la visualización de la explosión."""
     return {
@@ -57,8 +39,9 @@ def explosion_portrayal():
         "Layer": 3,  # Layer más alto para que aparezca sobre otros elementos
         "w": 1,
         "h": 1,
-        "scale": 1.0
+        "scale": 1.0,
     }
+
 
 def bomb_portrayal():
     return {
@@ -68,7 +51,6 @@ def bomb_portrayal():
         "scale": 0.7,  # Prueba distintos valores para ajustar el tamaño
         "Color": "red",
     }
-
 
 
 def grass_portrayal(agent):

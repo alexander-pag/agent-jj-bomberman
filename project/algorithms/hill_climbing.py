@@ -1,45 +1,41 @@
 from helpers.move_by_priority import get_neighbors_by_priority
 import math
 from config.constants import HEURISTICS
+from helpers.calculate_path import *
 
-def manhattan_distance(pos1, pos2):
-    """Calcula la distancia Manhattan entre dos posiciones en un grid."""
-    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
-
-def euclidean_distance(pos1, pos2):
-    """Calcula la distancia Euclidiana entre dos posiciones en un grid."""
-    return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)
-
-def calculate_path_cost(path, rocks_in_path):
-    """Calculate total cost including rock breaking."""
-    ROCK_BREAK_COST = 3
-    basic_cost = len(path) if path else float('inf')
-    rock_cost = len(rocks_in_path) * ROCK_BREAK_COST
-    return basic_cost + rock_cost
 
 def hill_climbing(start_pos, goal_pos, model, heuristic_type):
     """Hill climbing comparing paths with and without rocks."""
     # Find both paths
-    path_with_rocks = find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=True)
-    path_without_rocks = find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False)
-    
+    path_with_rocks = find_path(
+        start_pos, goal_pos, model, heuristic_type, allow_rocks=True
+    )
+    path_without_rocks = find_path(
+        start_pos, goal_pos, model, heuristic_type, allow_rocks=False
+    )
+
     # Calculate costs
     rocks_in_path = []
     if path_with_rocks[0]:
         rocks_in_path = path_with_rocks[2]
-    
+
     cost_with_rocks = calculate_path_cost(path_with_rocks[0], rocks_in_path)
     cost_without_rocks = calculate_path_cost(path_without_rocks[0], [])
-    
+
     print("\nComparación de costos:")
-    print(f"Camino con rocas: {cost_with_rocks} pasos (básico: {len(path_with_rocks[0]) if path_with_rocks[0] else 'inf'}, rocas: {len(rocks_in_path)})")
+    print(
+        f"Camino con rocas: {cost_with_rocks} pasos (básico: {len(path_with_rocks[0]) if path_with_rocks[0] else 'inf'}, rocas: {len(rocks_in_path)})"
+    )
     print(f"Camino sin rocas: {cost_without_rocks} pasos")
-    print(f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n")
-    
+    print(
+        f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n"
+    )
+
     # Return optimal path
     if cost_with_rocks < cost_without_rocks:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
     return path_without_rocks[0], path_without_rocks[1], []
+
 
 def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
     """Find path using hill climbing."""
@@ -83,7 +79,7 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
                 # Bloquear el movimiento a celdas con metales
                 if any(isinstance(agent, MetalAgent) for agent in cellmates):
                     continue  # Omite vecinos que contengan metales
-                
+
                 # Bloquear el movimiento a celdas con metales
                 if any(isinstance(agent, BorderAgent) for agent in cellmates):
                     continue  # Omite vecinos que contengan metales
@@ -118,9 +114,11 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
                             if any(isinstance(agent, RockAgent) for agent in cellmates):
                                 if not allow_rocks:
                                     can_move = False
-                            if any(isinstance(agent, MetalAgent) for agent in cellmates):
+                            if any(
+                                isinstance(agent, MetalAgent) for agent in cellmates
+                            ):
                                 can_move = False
-                            
+
                             if can_move:
                                 # Si el vecino es válido, continúa desde aquí
                                 current_pos = alternative_neighbor
@@ -130,7 +128,11 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
                                 break
 
             if not found_alternative:
-                return None, visited_order, rocks_found  # No se encontró una ruta alternativa
+                return (
+                    None,
+                    visited_order,
+                    rocks_found,
+                )  # No se encontró una ruta alternativa
 
         else:
             # Avanzar al mejor vecino encontrado

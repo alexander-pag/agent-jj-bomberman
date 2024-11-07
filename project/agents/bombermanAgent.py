@@ -1,10 +1,8 @@
 from mesa import Agent
-from algorithms import astar_search, bfs, ucs, dfs, beam_search, hill_climbing
+from algorithms import *
 from config.constants import *
 import logging
-from agents.rockAgent import RockAgent
-from agents.bombAgent import BombAgent
-from agents.explosionAgent import ExplosionAgent
+from agents import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
