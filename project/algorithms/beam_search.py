@@ -79,12 +79,14 @@ def find_path(
         raise ValueError("Heurística desconocida. Usa 'manhattan' o 'euclidean'.")
 
     current_nodes = [(start_pos, [start_pos])]
-    visited_order = [start_pos]
+    visited_order = []  # Mantendremos solo los nodos realmente expandidos aquí
     rocks_found = []
     visited_by_levels = {}
     level = 0
     cantRetrocesos = 0
 
+    # Guarda solo los nodos de expansión
+    expanded_nodes_in_path = set()  # Nodos realmente expandidos en el camino
     visited_by_levels[level] = [start_pos]
 
     def get_valid_neighbors(pos):
@@ -92,7 +94,7 @@ def find_path(
         ordered_neighbors = get_neighbors_by_priority(neighbors, pos, model.priority)
         valid = []
         for n in ordered_neighbors:
-            if n not in visited_order:
+            if n not in expanded_nodes_in_path:  # Ahora revisamos los nodos expandidos
                 cellmates = model.grid.get_cell_list_contents([n])
                 if any(isinstance(agent, RockAgent) for agent in cellmates):
                     if n not in rocks_found:
@@ -108,13 +110,19 @@ def find_path(
 
     while current_nodes:
         next_nodes = []
-        visited_by_levels[level] = [pos for pos, _ in current_nodes]
+        expanded_nodes = [pos for pos, _ in current_nodes if pos not in expanded_nodes_in_path]
+        
+        # Registra solo nodos de expansión en el nivel actual
+        if expanded_nodes:
+            visited_by_levels[level] = expanded_nodes
+            expanded_nodes_in_path.update(expanded_nodes)
+            visited_order.extend(expanded_nodes)  # Agrega los nodos de expansión al orden de visita
 
         for current_pos, path in current_nodes:
             if current_pos == goal_pos:
                 return (
                     path,
-                    visited_order,
+                    visited_order,  # Esto ahora solo contiene nodos expandidos
                     rocks_found,
                     visited_by_levels,
                     cantRetrocesos,
@@ -126,14 +134,13 @@ def find_path(
                 for neighbor in valid_neighbors:
                     new_path = path + [neighbor]
                     next_nodes.append((neighbor, new_path))
-                    visited_order.append(neighbor)
             else:
                 print(f"camino sin salida en {current_pos}")
                 cantRetrocesos += 1  # Incrementa el contador de retrocesos
 
+        # Ordenar y seleccionar el ancho de haz
         next_nodes.sort(key=lambda x: heuristic(x[0], goal_pos))
         current_nodes = next_nodes[:beam_width]
-
         level += 1
 
     return None  # Si no se encuentra un camino

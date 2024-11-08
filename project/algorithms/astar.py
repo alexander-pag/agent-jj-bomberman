@@ -4,21 +4,17 @@ from helpers.move_by_priority import get_neighbors_by_priority
 from collections import Counter
 from helpers.calculate_path import *
 
-
 costos = []
 
-
-def astar_search(start, goal, model, heuristic) -> tuple:
+def astar_search(start, goal, model, heuristic_type) -> tuple:
     """A* search comparing paths with and without rocks."""
     from agents import RockAgent
 
     global costos
 
     # Find both paths
-    path_with_rocks = find_path(start, goal, model, heuristic, costos, allow_rocks=True)
-    path_without_rocks = find_path(
-        start, goal, model, heuristic, costos, allow_rocks=False
-    )
+    path_with_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=True)
+    path_without_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=False)
 
     # Eliminar las celdas repetidas
     costos = list(set(costos))
@@ -71,22 +67,23 @@ def astar_search(start, goal, model, heuristic) -> tuple:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
     return path_without_rocks[0], path_without_rocks[1], []
 
-
-def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
+def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
     """Helper function to find path with A*."""
     from agents import RockAgent, MetalAgent, BorderAgent
 
-    def heuristic_manhattan_euclidean(a, b) -> float:
-        if heuristic == HEURISTICS[0]:
-            return manhattan_distance(a, b)
-        return euclidean_distance(a, b)
+    if heuristic_type == HEURISTICS[0]:
+        heuristic = manhattan_distance
+    elif heuristic_type == HEURISTICS[1]:
+        heuristic = euclidean_distance
+    else:
+        raise ValueError("Heurística desconocida. Usa 'manhattan' o 'euclidean'.")
 
     open_set = []
     heapq.heappush(open_set, (0, start))
     came_from = {}
     visited_order = []
     g_score = {start: 0}
-    f_score = {start: heuristic_manhattan_euclidean(start, goal)}
+    f_score = {start: heuristic(start, goal)}
     visited_by_levels = {}
     level = {start: 0}
 
@@ -109,14 +106,13 @@ def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
 
             return path, visited_order, visited_by_levels
 
-        neighbors = model.grid.get_neighborhood(
-            current, moore=False, include_center=False
-        )
-        ordered_neighbors = get_neighbors_by_priority(
-            neighbors, current, model.priority
+        neighbors = get_neighbors_by_priority(
+            model.grid.get_neighborhood(current, moore=False, include_center=False),
+            current,
+            model.priority
         )
 
-        for neighbor in ordered_neighbors:
+        for neighbor in neighbors:
             if model.grid.out_of_bounds(neighbor):
                 continue
 
@@ -131,13 +127,11 @@ def find_path(start, goal, model, heuristic, costos, allow_rocks=False):
             ):
                 continue
 
-            tentative_g_score = g_score[current] + 10
+            tentative_g_score = g_score[current] + 1  # Costo de 1 por cada paso
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = tentative_g_score + heuristic_manhattan_euclidean(
-                    neighbor, goal
-                )
+                f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
 
                 costos.append((neighbor, f_score[neighbor]))
 
