@@ -30,7 +30,9 @@ def hill_climbing(start_pos, goal_pos, model, heuristic_type):
     print(
         f"Eligiendo camino {'con' if cost_with_rocks < cost_without_rocks else 'sin'} rocas\n"
     )
-
+    
+    print("Cantidad de retrocesos: ", path_with_rocks[4])
+    
     print("Nodos expandidos por niveles:")
     for lvl, nodes in path_with_rocks[3].items():
         print(f"Nivel {lvl}: {nodes}")
@@ -45,7 +47,6 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
     """Find path using hill climbing."""
     from agents import RockAgent, MetalAgent, BorderAgent
 
-    # Selección de la heurística
     if heuristic_type == HEURISTICS[0]:
         heuristic = manhattan_distance
     elif heuristic_type == HEURISTICS[1]:
@@ -56,102 +57,118 @@ def find_path(start_pos, goal_pos, model, heuristic_type, allow_rocks=False):
     current_pos = start_pos
     path = [start_pos]
     visited_order = [start_pos]
-    rocks_found = []  # Lista para almacenar posiciones de rocas encontradas
+    rocks_found = []
     visited_by_levels = {}
+    nodes_with_unexplored = {}
     level = 0
+    max_level = 0  # Mantiene el nivel máximo alcanzado en cualquier punto
+    cantRetrocesos = 0
 
     visited_by_levels[level] = [current_pos]
 
-    while current_pos != goal_pos:
-        neighbors = model.grid.get_neighborhood(
-            current_pos, moore=False, include_center=False
-        )
-        ordered_neighbors = get_neighbors_by_priority(
-            neighbors, current_pos, model.priority
-        )
-
-        best_neighbor = None
-        best_heuristic = float("inf")
-
-        for neighbor in ordered_neighbors:
-            if neighbor not in visited_order:
-                cellmates = model.grid.get_cell_list_contents([neighbor])
-
-                # Registrar la posición de rocas
+    def get_valid_neighbors(pos):
+        """Helper function to get valid unvisited neighbors."""
+        neighbors = model.grid.get_neighborhood(pos, moore=False, include_center=False)
+        ordered_neighbors = get_neighbors_by_priority(neighbors, pos, model.priority)
+        valid = []
+        for n in ordered_neighbors:
+            if n not in visited_order:
+                cellmates = model.grid.get_cell_list_contents([n])
                 if any(isinstance(agent, RockAgent) for agent in cellmates):
-                    if neighbor not in rocks_found:
-                        rocks_found.append(neighbor)
+                    if n not in rocks_found:
+                        rocks_found.append(n)
                     if not allow_rocks:
-                        continue  # Skip rocks if not allowed
+                        continue
+                if any(isinstance(agent, MetalAgent) for agent in cellmates) or \
+                   any(isinstance(agent, BorderAgent) for agent in cellmates):
+                    continue
+                valid.append(n)
+        return valid
 
-                # Bloquear el movimiento a celdas con metales
-                if any(isinstance(agent, MetalAgent) for agent in cellmates):
-                    continue  # Omite vecinos que contengan metales
+    def update_unexplored_nodes():
+        """Update the list of unexplored neighbors for all recorded nodes."""
+        nodes_to_remove = []
+        for node_pos in list(nodes_with_unexplored.keys()):
+            valid_neighbors = get_valid_neighbors(node_pos)
+            if valid_neighbors:
+                valid_neighbors = [n for n in valid_neighbors if n not in path]
+                if valid_neighbors:
+                    nodes_with_unexplored[node_pos]['neighbors'] = valid_neighbors
+                else:
+                    nodes_to_remove.append(node_pos)
+            else:
+                nodes_to_remove.append(node_pos)
+        
+        for node_pos in nodes_to_remove:
+            if node_pos in nodes_with_unexplored:
+                del nodes_with_unexplored[node_pos]
 
-                # Bloquear el movimiento a celdas con metales
-                if any(isinstance(agent, BorderAgent) for agent in cellmates):
-                    continue  # Omite vecinos que contengan metales
+    while current_pos != goal_pos:
+        valid_neighbors = get_valid_neighbors(current_pos)
 
-                # Calcular la heurística para el vecino válido
-                h = heuristic(neighbor, goal_pos)
-                if h < best_heuristic:
-                    best_heuristic = h
-                    best_neighbor = neighbor
+        if valid_neighbors:
+            nodes_with_unexplored[current_pos] = {
+                'level': level,
+                'neighbors': valid_neighbors.copy(),
+                'path_to_here': path.copy()
+            }
+            print(f"\nEn nodo {current_pos} nivel {level}")
+            print(f"Vecinos válidos: {valid_neighbors}")
 
-        if best_neighbor is None or best_heuristic >= heuristic(current_pos, goal_pos):
-            # No hay camino directo; retroceder y recalcular
-            found_alternative = False
-            while path and not found_alternative:
-                # Retrocede al paso anterior
-                path.pop()
-                if path:
-                    current_pos = path[-1]
-                    visited_order.append(current_pos)
-
-                    # Intenta encontrar un nuevo vecino sin metal
-                    neighbors = model.grid.get_neighborhood(
-                        current_pos, moore=False, include_center=False
-                    )
-                    for alternative_neighbor in neighbors:
-                        if alternative_neighbor not in visited_order:
-                            cellmates = model.grid.get_cell_list_contents(
-                                [alternative_neighbor]
-                            )
-                            # Verificar si podemos movernos aquí
-                            can_move = True
-                            if any(isinstance(agent, RockAgent) for agent in cellmates):
-                                if not allow_rocks:
-                                    can_move = False
-                            if any(
-                                isinstance(agent, MetalAgent) for agent in cellmates
-                            ):
-                                can_move = False
-
-                            if can_move:
-                                # Si el vecino es válido, continúa desde aquí
-                                current_pos = alternative_neighbor
-                                path.append(current_pos)
-                                visited_order.append(current_pos)
-                                found_alternative = True
-                                break
-
-            if not found_alternative:
-                return (
-                    None,
-                    visited_order,
-                    rocks_found,
-                )  # No se encontró una ruta alternativa
-
-        else:
-            # Avanzar al mejor vecino encontrado
+            best_neighbor = min(valid_neighbors, key=lambda n: heuristic(n, goal_pos))
             current_pos = best_neighbor
             path.append(current_pos)
             visited_order.append(current_pos)
 
-            # Registrar el vecino en el siguiente nivel
             level += 1
+            max_level = max(max_level, level)  # Actualiza el nivel máximo alcanzado
+
             if level not in visited_by_levels:
                 visited_by_levels[level] = []
             visited_by_levels[level].append(current_pos)
 
-    return path, visited_order, rocks_found, visited_by_levels
+            update_unexplored_nodes()
+
+        else:
+            print(f"\nCallejón sin salida en nodo {current_pos}")
+            print("Nodos con caminos sin explorar:")
+            for pos, data in nodes_with_unexplored.items():
+                print(f"Nodo {pos} (nivel {data['level']}): {data['neighbors']}")
+
+            valid_backtrack_nodes = {}
+            for pos, data in nodes_with_unexplored.items():
+                valid_neighbors = get_valid_neighbors(pos)
+                if valid_neighbors:
+                    valid_backtrack_nodes[pos] = data
+
+            if not valid_backtrack_nodes:
+                return None, visited_order, rocks_found, visited_by_levels, cantRetrocesos
+
+            lowest_level_node = min(valid_backtrack_nodes.items(), 
+                                  key=lambda x: x[1]['level'])
+            backtrack_pos = lowest_level_node[0]
+            print(f"Retrocediendo al nodo {backtrack_pos} en nivel {lowest_level_node[1]['level']}")
+            cantRetrocesos += 1
+
+            path = nodes_with_unexplored[backtrack_pos]['path_to_here'].copy()
+            
+            level = max_level  # Establece el nivel como el último nivel máximo alcanzado
+
+            valid_neighbors = get_valid_neighbors(backtrack_pos)
+            if not valid_neighbors:
+                del nodes_with_unexplored[backtrack_pos]
+                continue
+
+            next_neighbor = min(valid_neighbors, key=lambda n: heuristic(n, goal_pos))
+            if not nodes_with_unexplored[backtrack_pos]['neighbors']:
+                del nodes_with_unexplored[backtrack_pos]
+
+            current_pos = next_neighbor
+            path.append(current_pos)
+            visited_order.append(current_pos)
+            level += 1  # Incrementa el nivel desde el nivel máximo
+
+            update_unexplored_nodes()
+
+    return path, visited_order, rocks_found, visited_by_levels, cantRetrocesos
+

@@ -9,7 +9,7 @@ X, R, C, R, C, C, C, C, C, C, C, C, C, C, C, R, C, R, C, C, C, X
 X, C, M, R, M, C, M, C, M, C, M, C, M, C, M, R, M, C, M, C, C, X
 X, C, C, R, C, R, R, R, C, C, C, C, C, C, C, R, C, C, C, C, C, X
 X, C, M, C, M, C, M, R, M, C, M, C, M, R, M, R, M, C, M, C, C, X
-X, C, C, C, C, C, C, C, R, C, S, C, R, R, C, R, C, R, C, C, C, X
+X, C, C, C, C, C, C, R, C, C, S, C, R, R, C, R, C, R, C, C, C, X
 X, R, M, C, M, C, M, C, M, C, M, R, M, R, M, C, M, C, M, C, C, X
 X, C, C, C, C, C, C, C, C, C, C, R, R, C, C, C, R, R, R, C, C, X
 X, C, M, C, M, C, M, R, M, C, M, C, M, C, M, C, M, R, M, C, C, X
