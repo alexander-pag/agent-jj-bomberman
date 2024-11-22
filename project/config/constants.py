@@ -15,6 +15,7 @@ UCS = "Búsqueda por costo uniforme"
 ASTAR = "Búsqueda A*"
 BEAM = "Búsqueda Beam Search"
 HILL = "Búsqueda Hill Climbing"
+PAB = "Poda Alpha-Beta"
 
 # Representación de los agentes en el mapa
 GRASS = "C"
@@ -50,7 +51,7 @@ MAP_20X20_2 = "project/assets/maps/20x20_2.txt"
 MAP_20X20_3 = "project/assets/maps/20x20_3.txt"
 
 # Valores del selector de algoritmos
-ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL]
+ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL, PAB]
 
 # Títulos para los selectores
 ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"
@@ -58,12 +59,13 @@ MAP_SELECTOR_TITLE = "Mapa"
 HEURISTIC_SELECTOR_TITLE = "Heurística"
 PRIORITY_SELECTOR_TITLE = "Prioridad"
 BALLOONS_SELECTOR_TITLE = "Número de enemigos"
+DIFICULTY_SELECTOR_TITLE = "Dificultad"
 
 # Valores del selector de heurísticas
 HEURISTICS = ["Manhattan", "Euclidean"]
 
 # Valores del selector de enemigos
-BALLOONS = [1,2,3,4,5,6,7,8,9,10]
+BALLOONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 # Valores del selector de prioridades
 PRIORITIES = [
@@ -73,6 +75,9 @@ PRIORITIES = [
     "Arriba, Izquierda, Abajo, Derecha",
     "Derecha, Izquierda, Abajo, Arriba",
 ]
+
+# Valores del selector de dificultades
+DIFFICULTIES = [1, 2, 3]
 
 # Nombre del proyecto
 PROJECT_NAME = "Bomberman v1.0"

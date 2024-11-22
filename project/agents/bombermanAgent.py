@@ -5,6 +5,7 @@ import logging
 from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
 from agents.explosionAgent import ExplosionAgent
+import math
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class BombermanAgent(Agent):
             ASTAR: astar_search,
             BEAM: beam_search,
             HILL: hill_climbing,
+            PAB: alpha_beta_search,
         }
         self.time_steps = 0
 
@@ -71,11 +73,30 @@ class BombermanAgent(Agent):
 
         if algorithm:
             # Llama al algoritmo y captura el resultado
-            result = (
-                algorithm(self.pos, self.goal, self.model, self.model.heuristic)
-                if self.model.search_algorithm in (ASTAR, BEAM, HILL)
-                else algorithm(self.pos, self.goal, self.model)
-            )
+            # result = (
+            #     algorithm(self.pos, self.goal, self.model, self.model.heuristic)
+            #     if self.model.search_algorithm in (ASTAR, BEAM, HILL)
+            #     else algorithm(self.pos, self.goal, self.model)
+            # )
+
+            result = None
+
+            if self.model.search_algorithm in (ASTAR, BEAM, HILL):
+                result = algorithm(
+                    self.pos, self.goal, self.model, self.model.heuristic
+                )
+
+            elif self.model.search_algorithm == PAB:
+                result = algorithm(
+                    self.model.map_to_matrix,
+                    self.model.dificulty,
+                    -math.inf,
+                    math.inf,
+                    True,
+                )
+
+            else:
+                result = algorithm(self.pos, self.goal, self.model)
 
             # Verifica el número de valores retornados
             if len(result) == 3:
