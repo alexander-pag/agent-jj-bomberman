@@ -5,11 +5,8 @@ import logging
 from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
 from agents.explosionAgent import ExplosionAgent
-<<<<<<< HEAD
 from algorithms.alpha_beta import choose_best_move, alpha_beta_pruning_with_tree
-=======
 import math
->>>>>>> 28c28a4239c5b15cb236fd04ca167ac034f88bab
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
