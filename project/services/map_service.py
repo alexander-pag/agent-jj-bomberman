@@ -1,5 +1,5 @@
 from helpers.file_reader import read_map_from_file
-from config.constants import BOMBERMAN, GOAL
+from config.constants import BOMBERMAN, GOAL, BALLOON
 
 
 def load_map_from_file(file_path):
@@ -8,10 +8,10 @@ def load_map_from_file(file_path):
     # Invertir el mapa
     map_data = map_data[::-1]
 
-    pos_bomberman, pos_goal = get_special_positions(map_data)
+    pos_bomberman, pos_goal, pos_balloons = get_special_positions(map_data)
     width = len(map_data[0])
     height = len(map_data)
-    return map_data, pos_bomberman, pos_goal, width, height
+    return map_data, pos_bomberman, pos_goal, pos_balloons, width, height
 
 
 def get_special_positions(map_data) -> tuple:
@@ -26,10 +26,13 @@ def get_special_positions(map_data) -> tuple:
     """
     pos_bomberman = None
     pos_goal = None
+    pos_balloon = None
     for y, row in enumerate(map_data):
         for x, cell in enumerate(row):
             if cell == BOMBERMAN:
                 pos_bomberman = (x, y)
             elif cell == GOAL:
                 pos_goal = (x, y)
-    return pos_bomberman, pos_goal
+            elif cell == BALLOON:
+                pos_balloon = (x, y)
+    return pos_bomberman, pos_goal, pos_balloon

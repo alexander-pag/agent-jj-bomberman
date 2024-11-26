@@ -24,6 +24,7 @@ METAL = "M"
 BOMBERMAN = "S"
 GOAL = "G"
 BORDER = "X"
+BALLOON = "B"
 
 # Colores para las celdas (usado en la representación visual)
 COLOR_GRASS = "#00FF00"
@@ -37,8 +38,8 @@ IMG_ROCK = "project/assets/images/terrain/wall1.png"
 IMG_BORDER = "project/assets/images/terrain/border.png"
 IMG_METAL = "project/assets/images/terrain/metal.png"
 IMG_GOAL = "project/assets/images/terrain/goal.png"
-IMG_GROUND = ("project/assets/images/terrain/ground1.png",)
-IMG_BALLOON = "project/assets/images/enemies/balloon/balloon.png"
+IMG_GROUND = "project/assets/images/terrain/ground1.png"
+IMG_BALLOON = "project/assets/images/enemies/balloon/balloon2.png"
 IMG_BOMB = "project/assets/images/items/bomb.png"
 IMG_EXPLOSION = "project/assets/images/items/explosion.png"
 

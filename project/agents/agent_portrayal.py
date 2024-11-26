@@ -6,7 +6,13 @@ from config.constants import *
 
 def agent_portrayal(agent) -> dict:
     """Define cómo se visualizarán los agentes en la simulación."""
-    portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5, "Layer": 0}
+    portrayal = {
+        "Shape": "circle",
+        "Filled": "true",
+        "r": 0.5,
+        "Layer": 0,
+        "scale": 1.0,
+    }
 
     if isinstance(agent, GrassAgent):
         return grass_portrayal(agent)
@@ -20,6 +26,7 @@ def agent_portrayal(agent) -> dict:
         return goal_portrayal()
     elif isinstance(agent, BalloonAgent):
         portrayal["Shape"] = get_image_path(IMG_BALLOON)
+        portrayal["scale"] = 0.7
         portrayal["Layer"] = 2
     elif isinstance(agent, BombermanAgent):
         portrayal["Shape"] = get_image_path(IMG_BOMBERMAN)

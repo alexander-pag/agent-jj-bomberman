@@ -6,18 +6,9 @@ from agents.borderAgent import BorderAgent
 
 
 class BalloonAgent(Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, start_pos):
         super().__init__(unique_id, model)
-        # darle una posición inicial aleatoria pero no en un obstáculo
-        x = self.random.randrange(model.grid.width)
-        y = self.random.randrange(model.grid.height)
-        self.pos = (x, y)
-        while self.is_obstacle(self.pos):
-            x = self.random.randrange(model.grid.width)
-            y = self.random.randrange(model.grid.height)
-            self.pos = (x, y)
-
-        self.model.grid.place_agent(self, self.pos)
+        self.pos = start_pos
 
     def step(self):
         self.move()

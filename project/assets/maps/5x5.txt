@@ -3,5 +3,5 @@ X, S, C, C, M, C, C, C, X
 X, C, M, C, C, C, M, C, X
 X, C, C, M, M, C, M, G, X
 X, C, M, C, C, C, M, C, X
-X, C, C, M, C, C, C, C, X
+X, C, C, M, B, C, C, C, X
 X, X, X, X, X, X, X, X, X

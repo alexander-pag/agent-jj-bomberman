@@ -12,6 +12,7 @@ from agents import (
 )
 from config.constants import *
 
+
 class BombermanModel(Model):
     def __init__(
         self,
@@ -24,7 +25,7 @@ class BombermanModel(Model):
         search_algorithm,
         priority,
         heuristic,
-        balloons
+        pos_balloon,
     ):
         super().__init__()
         self.width = width  # Almacenar el ancho
@@ -39,25 +40,21 @@ class BombermanModel(Model):
         self.schedule = RandomActivation(self)
         self.running = True
         self.priority = priority
-        self.balloons = balloons
         self.pos_goal = pos_goal
         self.create_map(map_data)
 
-
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
-
 
         self.grid.place_agent(self.bomberman, self.bomberman.pos)
 
-
         self.schedule.add(self.bomberman)
 
+        # añadir los globos al modelo
+        self.balloon = BalloonAgent(self.next_id(), self, pos_balloon)
 
-        for i in range(self.balloons):
-            balloon = BalloonAgent(i + 2, self)
-            self.grid.place_agent(balloon, balloon.pos)
-            self.schedule.add(balloon)
+        self.grid.place_agent(self.balloon, self.balloon.pos)
 
+        self.schedule.add(self.balloon)
 
     def create_map(self, map_data) -> None:
         """
@@ -73,7 +70,11 @@ class BombermanModel(Model):
         """
         for y, row in enumerate(map_data):
             for x, terrain_type in enumerate(row):
-                if terrain_type == GRASS or terrain_type == BOMBERMAN:
+                if (
+                    terrain_type == GRASS
+                    or terrain_type == BOMBERMAN
+                    or terrain_type == BALLOON
+                ):
                     cell = GrassAgent((x, y), self)
                 elif terrain_type == ROCK:
                     cell = RockAgent((x, y), self)
@@ -86,33 +87,28 @@ class BombermanModel(Model):
                 else:
                     continue
 
-
                 # Colocar el agente en la posición correcta
                 self.grid.place_agent(cell, (x, y))
                 self.schedule.add(cell)
 
-
     def step(self) -> None:
         self.schedule.step()
 
-
         agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
-       
+
         for a in agents_in_cell:
             if isinstance(a, BalloonAgent):
                 print("Bomberman ha sido derrotado")
                 self.running = False
-       
+
         # Verificar si Bomberman ha llegado a la salida
         if self.bomberman.pos == self.pos_goal:
             self.running = False
-
 
     def throw_bomb(self, current_pos, target_pos):
         """Destruye una roca y muestra animación de bomba"""
         cell_contents = self.grid.get_cell_list_contents(target_pos)
         rock_found = any(isinstance(agent, RockAgent) for agent in cell_contents)
-
 
         if rock_found:
             # Primero remover la roca
@@ -121,23 +117,21 @@ class BombermanModel(Model):
                     self.grid.remove_agent(agent)
                     break
             from agents import BombAgent
+
             # Crear y colocar bomba en la posición del objetivo
             bomb = BombAgent(self.next_id(), self, target_pos)
             self.grid.place_agent(bomb, target_pos)
-           
+
             # Crear césped después de un breve delay
             grass_agent = GrassAgent(target_pos, self)
             self.grid.place_agent(grass_agent, target_pos)
             self.schedule.add(grass_agent)
 
-
             # La bomba debe aparecer en una capa superior
             return bomb  # Retornamos la bomba para poder eliminarla después
 
-
     def next_id(self) -> int:
         return super().next_id()
-
 
     def get_state(self):
         state = [["X" for _ in range(self.width)] for _ in range(self.height)]
@@ -157,17 +151,19 @@ class BombermanModel(Model):
                 elif isinstance(agent, MetalAgent):
                     state[agent.pos[1]][agent.pos[0]] = "M"
             else:
-                print(f"Error: Posición inválida para {agent.__class__.__name__} en {agent.pos}")
+                print(
+                    f"Error: Posición inválida para {agent.__class__.__name__} en {agent.pos}"
+                )
         return state
 
-
-   
     def get_agent_positions(self):
         positions = {}
         for agent in self.schedule.agents:
-            print(f"Encontrado agente {agent.__class__.__name__} en posición {agent.pos}")  # Debug
-            if agent.__class__.__name__ == 'BombermanAgent':
-                positions['Bomberman'] = agent.pos
-            elif agent.__class__.__name__ == 'BalloonAgent':
-                positions['Enemy'] = agent.pos
+            print(
+                f"Encontrado agente {agent.__class__.__name__} en posición {agent.pos}"
+            )  # Debug
+            if agent.__class__.__name__ == "BombermanAgent":
+                positions["Bomberman"] = agent.pos
+            elif agent.__class__.__name__ == "BalloonAgent":
+                positions["Enemy"] = agent.pos
         return positions
