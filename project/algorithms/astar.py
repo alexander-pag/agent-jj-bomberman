@@ -16,25 +16,6 @@ def astar_search(start, goal, model, heuristic_type) -> tuple:
     path_with_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=True)
     path_without_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=False)
 
-    # Eliminar las celdas repetidas
-    costos = list(set(costos))
-
-    # Contar las frecuencias de cada función de costo
-    cost_frequencies = Counter([costo[1] for costo in costos])
-
-    # Obtener los costos más y menos repetidos
-    most_repeated_cost = max(cost_frequencies, key=cost_frequencies.get)
-    least_repeated_cost = min(cost_frequencies, key=cost_frequencies.get)
-
-    # Obtener las celdas asociadas a cada costo
-    celdas_most = [costo[0] for costo in costos if costo[1] == most_repeated_cost]
-    celdas_least = [costo[0] for costo in costos if costo[1] == least_repeated_cost]
-
-    print(f"La función de costo más repetida es: {most_repeated_cost}")
-    print(f"Las celdas con la función de costo más repetida son: {celdas_most}")
-    print(f"La función de costo menos repetida es: {least_repeated_cost}")
-    print(f"Las celdas con la función de costo menos repetida son: {celdas_least}")
-
     print("path with rocks", path_with_rocks[2])
     print("path without rocks", path_without_rocks[2])
 
@@ -86,6 +67,7 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
     f_score = {start: heuristic(start, goal)}
     visited_by_levels = {}
     level = {start: 0}
+    expansion_tree = {}  # Track nodes and their children
 
     while open_set:
         _, current = heapq.heappop(open_set)
@@ -104,6 +86,11 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
             path.append(start)
             path.reverse()
 
+            # Print expansion tree
+            print("\nÁrbol de expansión:")
+            for node, children in expansion_tree.items():
+                print(f"{node}: {children}")
+
             return path, visited_order, visited_by_levels
 
         neighbors = get_neighbors_by_priority(
@@ -112,30 +99,40 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
             model.priority
         )
 
-        for neighbor in neighbors:
+        for index, neighbor in enumerate(neighbors):
             if model.grid.out_of_bounds(neighbor):
                 continue
 
             cell_contents = model.grid.get_cell_list_contents([neighbor])
-            if any(
-                isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents
-            ):
+            if any(isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents):
+                continue
+            if not allow_rocks and any(isinstance(agent, RockAgent) for agent in cell_contents):
                 continue
 
-            if not allow_rocks and any(
-                isinstance(agent, RockAgent) for agent in cell_contents
-            ):
-                continue
+            # Calcular el g_score temporal
+            tentative_g_score = g_score[current] + 1  # Costo de movimiento
 
-            tentative_g_score = g_score[current] + 1  # Costo de 1 por cada paso
+            # Si el vecino aún no tiene un g_score o se encontró un camino más corto
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+                
+                # Ajuste de prioridad basado en el índice del vecino
+                priority_adjustment = (index + 1) * 0.0001  # Pequeño ajuste según el orden en neighbors
+                f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal) + priority_adjustment
 
-                costos.append((neighbor, f_score[neighbor]))
-
+                # Agregar a open_set respetando el orden de `model.priority`
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
                 level[neighbor] = current_level + 1
+
+                # Track expansion tree
+                if current not in expansion_tree:
+                    expansion_tree[current] = []
+                expansion_tree[current].append(neighbor)
+
+    # Print expansion tree if goal not reached
+    print("\nÁrbol de expansión:")
+    for node, children in expansion_tree.items():
+        print(f"{node}: {children}")
 
     return None, visited_order, visited_by_levels

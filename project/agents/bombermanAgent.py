@@ -5,6 +5,7 @@ import logging
 from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
 from agents.explosionAgent import ExplosionAgent
+from algorithms.alpha_beta import choose_best_move, alpha_beta_pruning_with_tree
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ class BombermanAgent(Agent):
             ASTAR: astar_search,
             BEAM: beam_search,
             HILL: hill_climbing,
+            ALPHA_BETA: choose_best_move,
         }
         self.time_steps = 0
 
@@ -49,17 +51,51 @@ class BombermanAgent(Agent):
         else:
             self.move()
 
+    def move(self) -> None:
+        """Gestiona el movimiento del agente Bomberman."""
+        print("### MOVIMIENTO DE BOMBERMAN ###")
+        if self.model.search_algorithm == ALPHA_BETA:
+            initial_state = self.model.get_state()
+            print("Estado inicial completo:")
+            for row in initial_state:
+                print(row)
+
+            next_move = choose_best_move(self.model, initial_state, True)
+
+            # Evaluar el siguiente movimiento usando poda alfa-beta
+            if next_move:
+                child_state = self.model.simulate_move(initial_state, next_move)
+                print(f"Moviendo Bomberman a {next_move}")
+                for row in child_state:
+                    print("".join(row))
+
+                value, state_tree = alpha_beta_pruning_with_tree(
+                    child_state,
+                    depth=2,
+                    alpha=float('-inf'),
+                    beta=float('inf'),
+                    maximizing_player=True,
+                    model=self.model,
+                )
+
+                print(f"Resultado de evaluación: {value}")
+
+                # Realizar el movimiento si es válido
+                self.model.grid.move_agent(self, next_move)
+                self.pos = next_move
+            else:
+                print("No se encontró movimiento válido")
+        else:
+            if self.path is None or not self.path:
+                self.calculate_path()
+
+            if self.path:
+                self.follow_path()
+
+
     def verify_exit(self) -> bool:
         """Verifica si Bomberman ha alcanzado la salida."""
         return self.pos == self.goal
-
-    def move(self) -> None:
-        """Gestiona el movimiento del agente Bomberman."""
-        if self.path is None or not self.path:
-            self.calculate_path()
-
-        if self.path:
-            self.follow_path()
 
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""
@@ -69,8 +105,7 @@ class BombermanAgent(Agent):
             f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
         )
 
-        if algorithm:
-            # Llama al algoritmo y captura el resultado
+        if algorithm and self.model.search_algorithm != ALPHA_BETA:
             result = (
                 algorithm(self.pos, self.goal, self.model, self.model.heuristic)
                 if self.model.search_algorithm in (ASTAR, BEAM, HILL)

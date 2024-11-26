@@ -28,6 +28,8 @@ class BombermanModel(Model):
         balloons
     ):
         super().__init__()
+        self.width = width  # Almacenar el ancho
+        self.height = height  # Almacenar la altura
         self.num_agents = number_of_agents
         self.search_algorithm = search_algorithm
         self.heuristic = heuristic
@@ -123,4 +125,35 @@ class BombermanModel(Model):
     def next_id(self) -> int:
         return super().next_id()
 
+    def get_state(self):
+        state = [["X" for _ in range(self.width)] for _ in range(self.height)]
+        for agent in self.schedule.agents:
+            print(f"Procesando agente {agent} en posición {agent.pos}")  # Debug
+            if 0 <= agent.pos[0] < self.width and 0 <= agent.pos[1] < self.height:
+                if isinstance(agent, BombermanAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "S"
+                elif isinstance(agent, BalloonAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "E"
+                elif isinstance(agent, GoalAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "G"
+                elif isinstance(agent, RockAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "R"
+                elif isinstance(agent, GrassAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "C"
+                elif isinstance(agent, MetalAgent):
+                    state[agent.pos[1]][agent.pos[0]] = "M"
+            else:
+                print(f"Error: Posición inválida para {agent.__class__.__name__} en {agent.pos}")
+        return state
+
+    
+    def get_agent_positions(self):
+        positions = {}
+        for agent in self.schedule.agents:
+            print(f"Encontrado agente {agent.__class__.__name__} en posición {agent.pos}")  # Debug
+            if agent.__class__.__name__ == 'BombermanAgent':
+                positions['Bomberman'] = agent.pos
+            elif agent.__class__.__name__ == 'BalloonAgent':
+                positions['Enemy'] = agent.pos
+        return positions
 

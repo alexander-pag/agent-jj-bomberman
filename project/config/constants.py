@@ -15,6 +15,7 @@ UCS = "Búsqueda por costo uniforme"
 ASTAR = "Búsqueda A*"
 BEAM = "Búsqueda Beam Search"
 HILL = "Búsqueda Hill Climbing"
+ALPHA_BETA = "Algoritmo Alfa Poda Beta"
 
 # Representación de los agentes en el mapa
 GRASS = "C"
@@ -50,7 +51,7 @@ MAP_20X20_2 = "project/assets/maps/20x20_2.txt"
 MAP_20X20_3 = "project/assets/maps/20x20_3.txt"
 
 # Valores del selector de algoritmos
-ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL]
+ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL, ALPHA_BETA]
 
 # Títulos para los selectores
 ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"
