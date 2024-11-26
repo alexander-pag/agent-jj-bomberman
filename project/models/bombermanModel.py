@@ -11,6 +11,7 @@ from agents import (
     BalloonAgent,
 )
 from config.constants import *
+from helpers.map_to_matrix import map_to_matrix
 
 
 class BombermanModel(Model):
@@ -25,7 +26,8 @@ class BombermanModel(Model):
         search_algorithm,
         priority,
         heuristic,
-        balloons
+        balloons,
+        dificulty,
     ):
         super().__init__()
         self.width = width  # Almacenar el ancho
@@ -42,7 +44,9 @@ class BombermanModel(Model):
         self.priority = priority
         self.balloons = balloons
         self.pos_goal = pos_goal
+        self.dificulty = dificulty
         self.create_map(map_data)
+        self.map_to_matrix = None
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -65,6 +69,11 @@ class BombermanModel(Model):
         Returns:
             None
         """
+
+        self.map_to_matrix = map_to_matrix(map_data)
+
+        print(self.map_to_matrix)
+
         for y, row in enumerate(map_data):
             for x, terrain_type in enumerate(row):
                 if terrain_type == GRASS or terrain_type == BOMBERMAN:
@@ -88,12 +97,12 @@ class BombermanModel(Model):
         self.schedule.step()
 
         agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
-        
+
         for a in agents_in_cell:
             if isinstance(a, BalloonAgent):
                 print("Bomberman ha sido derrotado")
                 self.running = False
-        
+
         # Verificar si Bomberman ha llegado a la salida
         if self.bomberman.pos == self.pos_goal:
             self.running = False
@@ -110,10 +119,11 @@ class BombermanModel(Model):
                     self.grid.remove_agent(agent)
                     break
             from agents import BombAgent
+
             # Crear y colocar bomba en la posición del objetivo
             bomb = BombAgent(self.next_id(), self, target_pos)
             self.grid.place_agent(bomb, target_pos)
-            
+
             # Crear césped después de un breve delay
             grass_agent = GrassAgent(target_pos, self)
             self.grid.place_agent(grass_agent, target_pos)
@@ -124,6 +134,7 @@ class BombermanModel(Model):
 
     def next_id(self) -> int:
         return super().next_id()
+<<<<<<< HEAD
 
     def get_state(self):
         state = [["X" for _ in range(self.width)] for _ in range(self.height)]
@@ -157,3 +168,5 @@ class BombermanModel(Model):
                 positions['Enemy'] = agent.pos
         return positions
 
+=======
+>>>>>>> 28c28a4239c5b15cb236fd04ca167ac034f88bab

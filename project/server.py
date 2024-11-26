@@ -51,6 +51,11 @@ def run_simulation():
             value=BALLOONS[0],
             choices=BALLOONS,
         ),
+        "dificulty": Choice(
+            name=DIFICULTY_SELECTOR_TITLE,
+            value=DIFFICULTIES[0],
+            choices=DIFFICULTIES,
+        ),
     }
 
     # Configurar el servidor para visualizar la simulación
