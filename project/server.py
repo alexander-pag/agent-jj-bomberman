@@ -8,6 +8,8 @@ from models.bombermanModel import BombermanModel
 from config.constants import *
 
 
+
+
 def run_simulation():
     # Seleccionar el archivo de mapa
     map_file = select_map()
@@ -15,13 +17,16 @@ def run_simulation():
         print("No se seleccionó ningún archivo de mapa. Saliendo...")
         return
 
+
     # Cargar los datos del mapa
     map_data, pos_bomberman, pos_goal, width, height = load_map_from_file(map_file)
+
 
     # Crear el canvas
     grid = CanvasGrid(
         agent_portrayal, width, height, DEFAULT_GRID_WIDTH, DEFAULT_GRID_HEIGHT
     )
+
 
     # Parámetros del modelo
     model_params = {
@@ -51,21 +56,23 @@ def run_simulation():
             value=BALLOONS[0],
             choices=BALLOONS,
         ),
-        "dificulty": Choice(
-            name=DIFICULTY_SELECTOR_TITLE,
-            value=DIFFICULTIES[0],
-            choices=DIFFICULTIES,
-        ),
     }
+
 
     # Configurar el servidor para visualizar la simulación
     server = ModularServer(BombermanModel, [grid], PROJECT_NAME, model_params)
 
+
     server.description = PROJECT_DESCRIPTION
+
 
     server.port = DEFAULT_PORT
     server.launch()
 
 
+
+
 if __name__ == "__main__":
     run_simulation()
+
+

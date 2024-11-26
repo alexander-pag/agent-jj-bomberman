@@ -6,10 +6,12 @@ from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
 from agents.explosionAgent import ExplosionAgent
 from algorithms.alpha_beta import choose_best_move, alpha_beta_pruning_with_tree
-import math
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
 
 
 class BombermanAgent(Agent):
@@ -33,9 +35,11 @@ class BombermanAgent(Agent):
         }
         self.time_steps = 0
 
+
     def step(self) -> None:
         """Realiza un paso en la simulación."""
         self.time_steps += 1
+
 
         if self.waiting_for_explosion:
             # Verificar si hay que retroceder
@@ -52,6 +56,7 @@ class BombermanAgent(Agent):
         else:
             self.move()
 
+
     def move(self) -> None:
         """Gestiona el movimiento del agente Bomberman."""
         print("### MOVIMIENTO DE BOMBERMAN ###")
@@ -61,7 +66,9 @@ class BombermanAgent(Agent):
             for row in initial_state:
                 print(row)
 
+
             next_move = choose_best_move(self.model, initial_state, True)
+
 
             # Evaluar el siguiente movimiento usando poda alfa-beta
             if next_move:
@@ -69,6 +76,7 @@ class BombermanAgent(Agent):
                 print(f"Moviendo Bomberman a {next_move}")
                 for row in child_state:
                     print("".join(row))
+
 
                 value, state_tree = alpha_beta_pruning_with_tree(
                     child_state,
@@ -79,7 +87,9 @@ class BombermanAgent(Agent):
                     model=self.model,
                 )
 
+
                 print(f"Resultado de evaluación: {value}")
+
 
                 # Realizar el movimiento si es válido
                 self.model.grid.move_agent(self, next_move)
@@ -90,40 +100,35 @@ class BombermanAgent(Agent):
             if self.path is None or not self.path:
                 self.calculate_path()
 
+
             if self.path:
                 self.follow_path()
+
+
+
 
     def verify_exit(self) -> bool:
         """Verifica si Bomberman ha alcanzado la salida."""
         return self.pos == self.goal
 
+
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""
         algorithm = self.algorithms.get(self.model.search_algorithm)
+
 
         logger.info(
             f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
         )
 
-        if algorithm:
-            result = None
 
-            if self.model.search_algorithm in (ASTAR, BEAM, HILL):
-                result = algorithm(
-                    self.pos, self.goal, self.model, self.model.heuristic
-                )
+        if algorithm and self.model.search_algorithm != ALPHA_BETA:
+            result = (
+                algorithm(self.pos, self.goal, self.model, self.model.heuristic)
+                if self.model.search_algorithm in (ASTAR, BEAM, HILL)
+                else algorithm(self.pos, self.goal, self.model)
+            )
 
-            elif self.model.search_algorithm == PAB:
-                result = algorithm(
-                    self.model.map_to_matrix,
-                    self.model.dificulty,
-                    -math.inf,
-                    math.inf,
-                    True,
-                )
-
-            else:
-                result = algorithm(self.pos, self.goal, self.model)
 
             # Verifica el número de valores retornados
             if len(result) == 3:
@@ -137,7 +142,9 @@ class BombermanAgent(Agent):
                 )
                 return
 
+
             print("Las rocas son: ", self.rocks)
+
 
             if self.path is None:
                 logger.warning(
@@ -149,6 +156,7 @@ class BombermanAgent(Agent):
                     (pos, idx + 1) for idx, pos in enumerate(visited_order)
                 ]
 
+
                 # Guardar las celdas que son parte del camino final
                 self.model.final_path_cells = set(self.path)
         else:
@@ -156,12 +164,15 @@ class BombermanAgent(Agent):
                 f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
             )
 
+
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
         if not self.path:
             return
 
+
         next_step = self.path[0]
+
 
         # Verificar si hay una roca en la siguiente posición
         if self.is_rock(next_step):
@@ -171,6 +182,7 @@ class BombermanAgent(Agent):
                 self.model.grid.place_agent(bomb_agent, self.pos)
                 self.model.schedule.add(bomb_agent)
                 self.waiting_for_explosion = True
+
 
                 # Calcula pasos de retroceso
                 cooldown_steps = bomb_agent.cooldown
@@ -183,25 +195,32 @@ class BombermanAgent(Agent):
                     self.history = []
             return
 
+
         # Si no hay roca o la explosión ya ocurrió, podemos movernos
         if not self.waiting_for_explosion:
             next_step = self.path.pop(0)
             previus_pos = self.pos
 
+
             self.model.grid.move_agent(self, next_step)
             self.pos = next_step
 
+
             self.history.append(previus_pos)
+
 
             if self.pos not in [pos for pos, _ in self.model.visited_cells]:
                 visit_number = len(self.model.visited_cells) + 1
                 self.model.visited_cells.append((self.pos, visit_number))
 
+
             if self.pos not in self.model.visited_ground_cells:
                 self.model.visited_ground_cells.add(self.pos)
 
+
         if self.verify_exit():
             self.model.running = False
+
 
     def is_rock(self, pos):
         """
@@ -209,6 +228,7 @@ class BombermanAgent(Agent):
         """
         agents = self.model.grid.get_cell_list_contents([pos])
         return any(isinstance(agent, RockAgent) for agent in agents)
+
 
     def check_explosion_status(self):
         """
@@ -225,6 +245,7 @@ class BombermanAgent(Agent):
             for agent in self.model.schedule.agents
             if isinstance(agent, ExplosionAgent)
         ]
+
 
         # Solo continuamos si no hay bombas ni explosiones activas y hemos terminado de retroceder
         if (

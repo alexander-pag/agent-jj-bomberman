@@ -4,7 +4,7 @@ from .astar import astar_search
 from .dfs import dfs
 from .bfs import bfs
 from .ucs import ucs
-from .alpha_beta import alpha_beta_search
+from .alpha_beta import choose_best_move
 
 __all__ = [
     "hill_climbing",
@@ -13,5 +13,5 @@ __all__ = [
     "dfs",
     "ucs",
     "bfs",
-    "alpha_beta_search",
+    "choose_best_move",
 ]
