@@ -29,11 +29,7 @@ class BombermanAgent(Agent):
             ASTAR: astar_search,
             BEAM: beam_search,
             HILL: hill_climbing,
-<<<<<<< HEAD
             ALPHA_BETA: choose_best_move,
-=======
-            PAB: alpha_beta_search,
->>>>>>> 28c28a4239c5b15cb236fd04ca167ac034f88bab
         }
         self.time_steps = 0
 
@@ -97,7 +93,6 @@ class BombermanAgent(Agent):
             if self.path:
                 self.follow_path()
 
-
     def verify_exit(self) -> bool:
         """Verifica si Bomberman ha alcanzado la salida."""
         return self.pos == self.goal
@@ -110,22 +105,7 @@ class BombermanAgent(Agent):
             f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
         )
 
-<<<<<<< HEAD
-        if algorithm and self.model.search_algorithm != ALPHA_BETA:
-            result = (
-                algorithm(self.pos, self.goal, self.model, self.model.heuristic)
-                if self.model.search_algorithm in (ASTAR, BEAM, HILL)
-                else algorithm(self.pos, self.goal, self.model)
-            )
-=======
         if algorithm:
-            # Llama al algoritmo y captura el resultado
-            # result = (
-            #     algorithm(self.pos, self.goal, self.model, self.model.heuristic)
-            #     if self.model.search_algorithm in (ASTAR, BEAM, HILL)
-            #     else algorithm(self.pos, self.goal, self.model)
-            # )
-
             result = None
 
             if self.model.search_algorithm in (ASTAR, BEAM, HILL):
@@ -144,7 +124,6 @@ class BombermanAgent(Agent):
 
             else:
                 result = algorithm(self.pos, self.goal, self.model)
->>>>>>> 28c28a4239c5b15cb236fd04ca167ac034f88bab
 
             # Verifica el número de valores retornados
             if len(result) == 3:
