@@ -62,27 +62,15 @@ class BombermanAgent(TerrainAgent):
             for row in initial_state:
                 print(row)
 
-            next_move = choose_best_move(self.model, initial_state, True)
+            # Elegir el mejor movimiento y el nuevo estado simulado
+            next_move, child_state = choose_best_move(self, self.model, initial_state, True)
 
-            # Evaluar el siguiente movimiento usando poda alfa-beta
             if next_move:
-                child_state = self.model.simulate_move(initial_state, next_move)
                 print(f"Moviendo Bomberman a {next_move}")
                 for row in child_state:
                     print("".join(row))
 
-                value, state_tree = alpha_beta_pruning_with_tree(
-                    child_state,
-                    depth=2,
-                    alpha=float("-inf"),
-                    beta=float("inf"),
-                    maximizing_player=True,
-                    model=self.model,
-                )
-
-                print(f"Resultado de evaluación: {value}")
-
-                # Realizar el movimiento si es válido
+                # Realizar el movimiento
                 self.model.grid.move_agent(self, next_move)
                 self.pos = next_move
             else:
@@ -94,9 +82,6 @@ class BombermanAgent(TerrainAgent):
             if self.path:
                 self.follow_path()
 
-    def verify_exit(self) -> bool:
-        """Verifica si Bomberman ha alcanzado la salida."""
-        return self.pos == self.goal
 
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""

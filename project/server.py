@@ -7,7 +7,6 @@ from agents.agent_portrayal import agent_portrayal
 from models.bombermanModel import BombermanModel
 from config.constants import *
 
-
 def run_simulation():
     # Seleccionar el archivo de mapa
     map_file = select_map()

@@ -3,14 +3,26 @@ from typing import List, Tuple, Any
 
 
 class StateTreeNode:
-    def __init__(self, state, depth, value=None, move=None, actor=None, details=None):
+    def __init__(
+        self,
+        state: Any,
+        depth: int,
+        value: Any | None = None,
+        move: Any | None = None,
+        actor: Any | None = None,
+        details: Any | None = None,
+        children: list = None
+    ):
         self.state = state
         self.depth = depth
         self.value = value
         self.move = move
         self.actor = actor
-        self.details = details or {}
-        self.children = []
+        self.details = details
+        self.children = children if children is not None else []
+
+    def __repr__(self):
+        return f"StateTreeNode(depth={self.depth}, value={self.value}, state={self.state})"
 
 
 def manhattan_distance(pos1, pos2):
@@ -20,105 +32,65 @@ def manhattan_distance(pos1, pos2):
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 
-def alpha_beta_pruning_with_tree(
-    state,
-    depth,
-    alpha,
-    beta,
-    maximizing_player,
-    model,
-    max_depth=2,
-    current_move=None,
-    actor=None,
-):
+def alpha_beta_pruning_with_tree(state, depth, alpha, beta, maximizing_player, model):
     """
-    Implementación del algoritmo de poda alfa-beta para Bomberman con construcción de árbol.
+    Implementa el algoritmo alpha-beta pruning con construcción de un árbol de estados.
     """
-    # Condiciones de parada
-    if depth == 0 or is_terminal_state(state, model):
-        value = evaluate_state(state, maximizing_player, model)
-        details = get_state_details(state, model)
-        return value, StateTreeNode(
-            state, depth, value=value, move=current_move, actor=actor, details=details
-        )
+    if not isinstance(state, list) or not all(isinstance(row, list) for row in state):
+        raise ValueError("El estado no tiene la estructura de una lista de listas.")
 
-    node = StateTreeNode(state, depth, move=current_move, actor=actor)
+    if depth == 0 or model.is_terminal_state(state):
+        value = model.evaluate_state(state, maximizing_player)
+        return value, StateTreeNode(state, depth, value=value, children=[])
 
-    if maximizing_player:  # Turno de Bomberman
+    node = StateTreeNode(state, depth, value=None, children=[])
+
+    if maximizing_player:
         max_eval = float("-inf")
-        possible_states = get_possible_states(state, find_position(state, "S"), model)
+        possible_positions = model.get_possible_states(state, "S")  # Movimientos para Bomberman
 
-        if not possible_states:
-            return float("-inf"), node
-
-        for child_pos in possible_states:
-            # Crear nuevo estado moviendo a Bomberman
-            child_state = move_actor(state, "S", find_position(state, "S"), child_pos)
-
-            # Recursión con minimizando el siguiente nivel (turno del enemigo)
+        for new_state, new_pos in possible_positions:
+            child_state = model.simulate_move(state, "S", new_pos)
             eval, child_node = alpha_beta_pruning_with_tree(
-                child_state,
-                depth - 1,
-                alpha,
-                beta,
-                False,
-                model,
-                max_depth,
-                current_move=child_pos,
-                actor="S",
+                child_state, depth - 1, alpha, beta, False, model
             )
-
             node.children.append(child_node)
+
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
-
-            # Condiciones de poda
-            if beta <= alpha or depth == max_depth:
+            if beta <= alpha:
                 break
+
+        node.value = max_eval
         return max_eval, node
 
-    else:  # Turno del globo (minimizando)
+    else:
         min_eval = float("inf")
-        possible_states = get_possible_states(state, find_position(state, "E"), model)
+        possible_positions = model.get_possible_states(state, "B")  # Movimientos para el enemigo
 
-        if not possible_states:
-            return float("inf"), node
-
-        for child_pos in possible_states:
-            # Crear nuevo estado moviendo al enemigo
-            child_state = move_actor(state, "E", find_position(state, "E"), child_pos)
-
-            # Recursión con maximizando el siguiente nivel (turno de Bomberman)
+        for new_state,new_pos in possible_positions:
+            child_state = model.simulate_move(state, "B", new_pos)
             eval, child_node = alpha_beta_pruning_with_tree(
-                child_state,
-                depth - 1,
-                alpha,
-                beta,
-                True,
-                model,
-                max_depth,
-                current_move=child_pos,
-                actor="E",
+                child_state, depth - 1, alpha, beta, True, model
             )
-
             node.children.append(child_node)
+
             min_eval = min(min_eval, eval)
             beta = min(beta, eval)
-
-            # Condiciones de poda
-            if beta <= alpha or depth == max_depth:
+            if beta <= alpha:
                 break
-        return min_eval, node
 
+        node.value = min_eval
+        return min_eval, node
 
 def get_state_details(state, model):
     """
     Obtiene detalles detallados de un estado.
     Maneja casos donde las posiciones no se encuentran.
     """
-    bomberman_pos = find_position(state, "S")
-    goal_pos = find_position(state, "G")
-    enemy_pos = find_position(state, "E")
+    bomberman_pos = model.find_position(state, "S")
+    goal_pos = model.find_position(state, "G")
+    enemy_pos = model.find_position(state, "B")
 
     # Si alguna posición no se encuentra, devolver detalles con valores por defecto
     if bomberman_pos is None or goal_pos is None or enemy_pos is None:
@@ -162,135 +134,60 @@ def print_state_tree(node, indent=""):
         print_state_tree(child, indent + "    ")
 
 
-def evaluate_state(state, maximizing_player, model):
-    """
-    Evalúa el estado actual del juego con una heurística multifactorial.
-    """
-    bomberman_pos = find_position(state, "S")
-    goal_pos = find_position(state, "G")
-    enemy_pos = find_position(state, "E")
-
-    # Casos terminales con mayor prioridad
-    if not bomberman_pos or not goal_pos or not enemy_pos:
-        return 0  # Estado no válido
-
-    if bomberman_pos == goal_pos:
-        return float("inf")  # Victoria de Bomberman
-
-    if bomberman_pos == enemy_pos:
-        return float("-inf")  # Derrota de Bomberman
-
-    # Heurística multiobjetivo
-    distance_to_goal = manhattan_distance(bomberman_pos, goal_pos)
-    distance_to_enemy = manhattan_distance(bomberman_pos, enemy_pos)
-
-    if maximizing_player:  # Turno de Bomberman
-        # Prioriza acercarse a la meta y alejarse del enemigo
-        score = -distance_to_goal * 2 + distance_to_enemy
-    else:  # Turno del globo
-        # Prioriza acercarse a Bomberman
-        score = distance_to_enemy
-
-    return score
-
-
-def find_position(state, actor):
-    for y, row in enumerate(state):
-        for x, cell in enumerate(row):
-            if cell == actor:
-                return (x, y)
-    print(f"Actor {actor} no encontrado en el estado.")
-    return None
-
-
-def get_possible_states(state, current_pos, model):
-    print(f"Debug - Current Position: {current_pos}")
-    neighbors = model.grid.get_neighborhood(
-        current_pos, moore=False, include_center=False
-    )
-
-    valid_states = []
-    for neighbor in neighbors:
-        if is_valid_move(neighbor, model):
-            valid_states.append(neighbor)
-
-    return valid_states
-
-
-def is_valid_move(position, model):
-    x, y = position
-
-    # Verificar límites del mapa
-    if x < 0 or x >= model.width or y < 0 or y >= model.height:
-        return False
-
-    cell_contents = model.grid.get_cell_list_contents(position)
-    from agents import MetalAgent, BorderAgent
-
-    # Verificar obstáculos
-    for agent in cell_contents:
-        if isinstance(agent, (MetalAgent, BorderAgent)):
-            return False
-
-    return True
 
 
 def move_actor(state, actor, current_pos, new_pos):
     new_state = [row[:] for row in state]  # Copiar el estado
     if current_pos:
         new_state[current_pos[1]][current_pos[0]] = "C"  # Limpia la posición actual
-    new_state[new_pos[1]][new_pos[0]] = "S" if actor == "S" else "E"
+    new_state[new_pos[1]][new_pos[0]] = "S" if actor == "S" else "B"
     return new_state
 
 
-def choose_best_move(model, initial_state, is_bomberman_turn):
+def choose_best_move(self, model, initial_state, is_bomberman_turn):
     """
     Elige el mejor movimiento usando alfa-beta pruning.
     """
-    bomberman_pos = model.get_agent_positions()["Bomberman"]
-    print(f"Debug - Bomberman Position: {bomberman_pos}")
-    print(f"Debug - Initial State: {initial_state}")
+    # Determinar el actor basado en el turno
+    agent = "S" if is_bomberman_turn else "B"
 
+    # Obtener posición actual del actor
+    agent_pos = model.get_agent_positions()[agent]
+
+    # Obtener estados posibles
+    possible_states = model.get_possible_states(initial_state, agent)
+
+    print("Estados posibles generados:")
+    for state, new_pos in possible_states:
+        for row in state:
+            print(row)
+        print(f"Movimiento hacia: {new_pos}")
+
+    # Evaluar estados
     best_move = None
     best_value = float("-inf") if is_bomberman_turn else float("inf")
     best_tree = None
 
-    possible_states = get_possible_states(initial_state, bomberman_pos, model)
-
-    print("Evaluando movimientos posibles de Bomberman:")
-    for child_pos in possible_states:
-        # Create a new state by moving Bomberman
-        child_state = move_actor(initial_state, "S", bomberman_pos, child_pos)
-
+    for child_state, new_pos in possible_states:
+        # Evaluar el estado hijo usando poda alfa-beta
         value, state_tree = alpha_beta_pruning_with_tree(
-            child_state,
-            depth=2,  # Aumenté la profundidad para más detalle
-            alpha=float("-inf"),
-            beta=float("inf"),
-            maximizing_player=is_bomberman_turn,
-            model=model,
+            child_state, depth=2, alpha=float("-inf"), beta=float("inf"),
+            maximizing_player=is_bomberman_turn, model=model
         )
 
-        print(f"\nMovimiento a {child_pos}:")
-        print(f"Valor de evaluación: {value}")
-
-        if is_bomberman_turn and value > best_value:
+        # Si encontramos un mejor valor, actualizamos
+        if (is_bomberman_turn and value > best_value) or (not is_bomberman_turn and value < best_value):
             best_value = value
-            best_move = child_pos
-            best_tree = state_tree
-        elif not is_bomberman_turn and value < best_value:
-            best_value = value
-            best_move = child_pos
+            best_move = new_pos
             best_tree = state_tree
 
     print("\nÁrbol de Expansión de Estados para el mejor movimiento:")
     print_state_tree(best_tree)
 
-    return best_move if best_move else bomberman_pos
+    # Si no hay un mejor movimiento, mantener la posición actual
+    if best_move is None:
+        print("No se encontró un mejor movimiento, manteniendo posición actual.")
+        return agent_pos, initial_state
 
-
-def is_terminal_state(state, model):
-    bomberman_pos = find_position(state, "S")
-    goal_pos = find_position(state, "G")
-    enemy_pos = find_position(state, "E")
-    return bomberman_pos == goal_pos or bomberman_pos == enemy_pos
+    # Retornar el mejor movimiento y el estado simulado
+    return best_move, model.simulate_move(initial_state, agent, best_move)

@@ -54,6 +54,16 @@ MAP_20X20_3 = "project/assets/maps/20x20_3.txt"
 # Valores del selector de algoritmos
 ALGORITHMS = [BFS, DFS, UCS, ASTAR, BEAM, HILL, ALPHA_BETA]
 
+ACTOR_SYMBOLS = {
+    "Bomberman": "S",
+    "Enemy": "B",
+    "Goal": "G",
+    "S":"S",
+    "B":"B",
+    "G":"G",
+}
+
+
 # Títulos para los selectores
 ALGORITHM_SELECTOR_TITLE = "Algoritmo de búsqueda"
 MAP_SELECTOR_TITLE = "Mapa"
