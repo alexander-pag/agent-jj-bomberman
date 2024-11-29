@@ -52,6 +52,12 @@ class BombermanAgent(TerrainAgent):
                 print(f"Camino recalculado desde posición {self.pos}")
         else:
             self.move()
+    
+            
+    def verify_exit(self) -> bool:
+        """Verifica si Bomberman ha alcanzado la salida."""
+        return self.pos == self.goal
+    
 
     def move(self) -> None:
         """Gestiona el movimiento del agente Bomberman."""
@@ -140,7 +146,7 @@ class BombermanAgent(TerrainAgent):
         if self.is_rock(next_step):
             # Colocar bomba solo si no estamos ya esperando una explosión
             if not self.waiting_for_explosion:
-                bomb_agent = BombAgent(self.model.next_id(), self.model, 1, self.pos)
+                bomb_agent = BombAgent(self.model.next_id(), self.model, self.pos)
                 self.model.grid.place_agent(bomb_agent, self.pos)
                 self.model.schedule.add(bomb_agent)
                 self.waiting_for_explosion = True

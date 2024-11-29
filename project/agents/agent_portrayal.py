@@ -35,6 +35,8 @@ def agent_portrayal(agent) -> dict:
         return bomb_portrayal()
     elif isinstance(agent, ExplosionAgent):
         return explosion_portrayal()
+    elif isinstance(agent, PowerAgent):
+        return power_portrayal()
     return portrayal
 
 
@@ -43,7 +45,7 @@ def explosion_portrayal():
     return {
         "Shape": get_image_path(IMG_EXPLOSION),
         "Filled": "true",
-        "Layer": 3,  # Layer más alto para que aparezca sobre otros elementos
+        "Layer": 3,  
         "w": 1,
         "h": 1,
         "scale": 1.0,
@@ -55,7 +57,7 @@ def bomb_portrayal():
         "Shape": get_image_path(IMG_BOMB),
         "Filled": "true",
         "Layer": 1,
-        "scale": 0.7,  # Prueba distintos valores para ajustar el tamaño
+        "scale": 0.7,  
         "Color": "red",
     }
 
@@ -91,7 +93,7 @@ def rock_portrayal():
     return {
         "Shape": get_image_path(IMG_ROCK),
         "Filled": "true",
-        "Layer": 0,
+        "Layer": 2,
         "w": 1,
         "h": 1,
     }
@@ -124,4 +126,15 @@ def goal_portrayal():
         "Layer": 0,
         "w": 1,
         "h": 1,
+    }
+    
+
+def power_portrayal():
+    return {
+        "Shape": get_image_path(IMG_POWER),
+        "Filled": "true",
+        "Layer": 1,
+        "w": 1,
+        "h": 1,
+        "scale": 0.5,
     }

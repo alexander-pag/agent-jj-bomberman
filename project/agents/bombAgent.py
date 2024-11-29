@@ -5,15 +5,16 @@ from agents.grassAgent import GrassAgent
 from agents.metalAgent import MetalAgent
 from agents.rockAgent import RockAgent
 import logging
+from collections import deque
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class BombAgent(Agent):
-    def __init__(self, unique_id, model, power, pos):
+    def __init__(self, unique_id, model, pos):
         super().__init__(unique_id, model)
-        self.power = power
+        self.power = model.destruction_power
         self.cooldown = 2
         self.pos = pos
 
@@ -28,46 +29,58 @@ class BombAgent(Agent):
         # Create list to track changes
         changes = []
 
-        positions = [
-            self.pos,
-            (self.pos[0] + 1, self.pos[1]),
-            (self.pos[0] - 1, self.pos[1]),
-            (self.pos[0], self.pos[1] + 1),
-            (self.pos[0], self.pos[1] - 1),
-        ]
+        # Initialize BFS queue with the starting position and distance 0
+        queue = deque([(self.pos, 0)])
+        visited = set()  # Track visited cells to avoid processing them multiple times
 
-        # Filter valid positions and check for metal/border agents
-        valid_positions = []
-        for pos in positions:
+        while queue:
+            current_pos, distance = queue.popleft()
+
+            # Skip positions already visited
+            if current_pos in visited:
+                continue
+            visited.add(current_pos)
+
             # Check grid boundaries
             if not (
-                0 <= pos[0] < self.model.grid.width
-                and 0 <= pos[1] < self.model.grid.height
+                0 <= current_pos[0] < self.model.grid.width
+                and 0 <= current_pos[1] < self.model.grid.height
             ):
                 continue
 
             # Check cell contents
-            cell_contents = self.model.grid.get_cell_list_contents(pos)
-            if any(
-                isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents
-            ):
+            cell_contents = self.model.grid.get_cell_list_contents(current_pos)
+            if any(isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents):
                 continue
 
-            valid_positions.append(pos)
-
-        # Process explosions for valid positions
-        for pos in valid_positions:
-            # Create explosion
-            explosion = ExplosionAgent(self.model.next_id(), self.model)
-            changes.append(("add_explosion", explosion, pos))
-
             # Handle rocks
-            cell_contents = self.model.grid.get_cell_list_contents(pos)
+            rock_found = False
             for agent in cell_contents:
                 if isinstance(agent, RockAgent):
-                    changes.append(("remove", agent, pos))
+                    changes.append(("remove", agent, current_pos))
                     grass = GrassAgent(self.model.next_id(), self.model)
-                    changes.append(("add_grass", grass, pos))
+                    changes.append(("add_grass", grass, current_pos))
+                    rock_found = True  # Stop propagation beyond this point
+                    break
+
+            # Add explosion to the current position
+            explosion = ExplosionAgent(self.model.next_id(), self.model)
+            changes.append(("add_explosion", explosion, current_pos))
+
+            # Stop further exploration if a rock was found or max distance is reached
+            if rock_found or distance >= self.power:
+                continue
+
+            # Add neighboring positions to the queue for further exploration
+            neighbors = [
+                (current_pos[0] + 1, current_pos[1]),
+                (current_pos[0] - 1, current_pos[1]),
+                (current_pos[0], current_pos[1] + 1),
+                (current_pos[0], current_pos[1] - 1),
+            ]
+            for neighbor in neighbors:
+                if neighbor not in visited:
+                    queue.append((neighbor, distance + 1))
 
         # Apply changes atomically
         for action, agent, pos in changes:

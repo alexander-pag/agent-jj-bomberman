@@ -8,6 +8,7 @@ from .borderAgent import BorderAgent
 from .goalAgent import GoalAgent
 from .explosionAgent import ExplosionAgent
 from .borderAgent import BorderAgent
+from .powerAgent import PowerAgent
 
 __all__ = [
     "GrassAgent",
@@ -19,4 +20,5 @@ __all__ = [
     "BorderAgent",
     "GoalAgent",
     "ExplosionAgent",
+    "PowerAgent",
 ]

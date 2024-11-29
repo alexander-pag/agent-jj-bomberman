@@ -3,6 +3,7 @@ BOMBERMAN_AGENT = "Bomberman"
 GRASS_AGENT = "Grass"
 ROCK_AGENT = "Rock"
 METAL_AGENT = "Metal"
+POWER_AGENT = "Power"
 
 # Dimensiones por defecto del grid
 DEFAULT_GRID_WIDTH = 600
@@ -15,7 +16,7 @@ UCS = "Búsqueda por costo uniforme"
 ASTAR = "Búsqueda A*"
 BEAM = "Búsqueda Beam Search"
 HILL = "Búsqueda Hill Climbing"
-ALPHA_BETA = "Algoritmo Alfa Poda Beta"
+ALPHA_BETA = "Poda Alfa Beta"
 
 # Representación de los agentes en el mapa
 GRASS = "C"
@@ -42,6 +43,7 @@ IMG_GROUND = "project/assets/images/terrain/ground1.png"
 IMG_BALLOON = "project/assets/images/enemies/balloon/balloon2.png"
 IMG_BOMB = "project/assets/images/items/bomb.png"
 IMG_EXPLOSION = "project/assets/images/items/explosion.png"
+IMG_POWER = "project/assets/images/items/power.png"
 
 # Rutas de los mapas
 MAP_5X5 = "project/assets/maps/5x5.txt"
@@ -71,6 +73,7 @@ HEURISTIC_SELECTOR_TITLE = "Heurística"
 PRIORITY_SELECTOR_TITLE = "Prioridad"
 BALLOONS_SELECTOR_TITLE = "Número de enemigos"
 DIFICULTY_SELECTOR_TITLE = "Dificultad"
+NUMBER_POWERS_SELECTOR_TITLE = "Número de poderes"
 
 # Valores del selector de heurísticas
 HEURISTICS = ["Manhattan", "Euclidean"]
@@ -89,6 +92,9 @@ PRIORITIES = [
 
 # Valores del selector de dificultades
 DIFFICULTIES = [1, 2, 3]
+
+# Valores del selector de número de poderes
+NUMBER_POWERS = [1, 2, 3, 4, 5]
 
 # Nombre del proyecto
 PROJECT_NAME = "Bomberman v1.0"

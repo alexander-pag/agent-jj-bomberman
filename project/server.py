@@ -15,7 +15,7 @@ def run_simulation():
         return
 
     # Cargar los datos del mapa
-    map_data, pos_bomberman, pos_goal, pos_balloon, width, height = load_map_from_file(
+    map_data, pos_bomberman, pos_goal, pos_balloon, rocks, width, height = load_map_from_file(
         map_file
     )
 
@@ -47,6 +47,12 @@ def run_simulation():
             value=HEURISTICS[0],
             choices=HEURISTICS,
         ),
+        "powers": Choice(
+            name=NUMBER_POWERS_SELECTOR_TITLE,
+            value=NUMBER_POWERS[0],
+            choices=NUMBER_POWERS,
+        ),
+        "rocks": rocks,
         "pos_balloon": pos_balloon,
     }
 

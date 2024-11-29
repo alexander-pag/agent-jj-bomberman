@@ -9,9 +9,11 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
+    PowerAgent
 )
 from config.constants import *
 from algorithms.alpha_beta import manhattan_distance
+import random
 
 class BombermanModel(Model):
     def __init__(
@@ -25,6 +27,8 @@ class BombermanModel(Model):
         search_algorithm,
         priority,
         heuristic,
+        powers,
+        rocks,
         pos_balloon,
     ):
         super().__init__()
@@ -41,6 +45,9 @@ class BombermanModel(Model):
         self.running = True
         self.priority = priority
         self.pos_goal = pos_goal
+        self.num_powers = powers
+        self.rocks = rocks
+        self.destruction_power = 1
         self.create_map(map_data)
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
@@ -56,6 +63,15 @@ class BombermanModel(Model):
 
         self.schedule.add(self.balloon)
         
+        
+        # colocar poderes aleatorios debajo de las rocas
+        for _ in range(self.num_powers):
+            x, y = random.choice(self.rocks)
+            from agents import PowerAgent
+
+            power = PowerAgent(self.next_id(), self, (x, y))
+            self.grid.place_agent(power, (x, y))
+            self.schedule.add(power)
 
     def create_map(self, map_data) -> None:
         """
@@ -69,6 +85,7 @@ class BombermanModel(Model):
         Returns:
             None
         """
+        
         for y, row in enumerate(map_data):
             for x, terrain_type in enumerate(row):
                 if (
@@ -105,6 +122,15 @@ class BombermanModel(Model):
         # Verificar si Bomberman ha llegado a la salida
         if self.bomberman.pos == self.pos_goal:
             self.running = False
+            
+        # verificar si bomberman ha pasado por la posición del poder
+        for agent in self.grid.get_cell_list_contents(self.bomberman.pos):
+            if isinstance(agent, PowerAgent):
+                print("################# Bomberman ha obtenido un poder ###########")
+                self.destruction_power += 1
+                self.grid.remove_agent(agent)
+                self.schedule.remove(agent)
+                break
 
     def throw_bomb(self, current_pos, target_pos):
         """Destruye una roca y muestra animación de bomba"""
