@@ -65,7 +65,11 @@ class BombermanModel(Model):
         
         
         # colocar poderes aleatorios debajo de las rocas
-        for _ in range(self.num_powers):
+        if self.num_powers > len(self.rocks):
+            # añadir el número de poderes que se pueda
+            self.num_powers = len(self.rocks)
+        
+        for _ in range(self.num_powers):             
             x, y = random.choice(self.rocks)
             from agents import PowerAgent
 
