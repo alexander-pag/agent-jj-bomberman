@@ -1,7 +1,5 @@
 X, X, X, X, X, X, X, X, X
-X, B, C, S, M, C, C, C, X
-X, C, M, C, C, C, M, C, X
-X, C, C, M, M, C, M, G, X
-X, C, M, R, C, C, M, C, X
-X, C, C, M, C, C, C, C, X
+X, B, C, C, C, C, C, C, X
+X, C, M, M, M, M, M, G, X
+X, S, C, C, C, C, C, C, X
 X, X, X, X, X, X, X, X, X

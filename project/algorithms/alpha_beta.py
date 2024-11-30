@@ -11,7 +11,7 @@ class StateTreeNode:
         move: Any | None = None,
         actor: Any | None = None,
         details: Any | None = None,
-        children: list = None
+        children: list = None,
     ):
         self.state = state
         self.depth = depth
@@ -22,7 +22,9 @@ class StateTreeNode:
         self.children = children if children is not None else []
 
     def __repr__(self):
-        return f"StateTreeNode(depth={self.depth}, value={self.value}, state={self.state})"
+        return (
+            f"StateTreeNode(depth={self.depth}, value={self.value}, state={self.state})"
+        )
 
 
 def manhattan_distance(pos1, pos2):
@@ -47,7 +49,9 @@ def alpha_beta_pruning_with_tree(state, depth, alpha, beta, maximizing_player, m
 
     if maximizing_player:
         max_eval = float("-inf")
-        possible_positions = model.get_possible_states(state, "S")  # Movimientos para Bomberman
+        possible_positions = model.get_possible_states(
+            state, "S"
+        )  # Movimientos para Bomberman
 
         for new_state, new_pos in possible_positions:
             child_state = model.simulate_move(state, "S", new_pos)
@@ -66,9 +70,11 @@ def alpha_beta_pruning_with_tree(state, depth, alpha, beta, maximizing_player, m
 
     else:
         min_eval = float("inf")
-        possible_positions = model.get_possible_states(state, "B")  # Movimientos para el enemigo
+        possible_positions = model.get_possible_states(
+            state, "B"
+        )  # Movimientos para el enemigo
 
-        for new_state,new_pos in possible_positions:
+        for new_state, new_pos in possible_positions:
             child_state = model.simulate_move(state, "B", new_pos)
             eval, child_node = alpha_beta_pruning_with_tree(
                 child_state, depth - 1, alpha, beta, True, model
@@ -82,6 +88,7 @@ def alpha_beta_pruning_with_tree(state, depth, alpha, beta, maximizing_player, m
 
         node.value = min_eval
         return min_eval, node
+
 
 def get_state_details(state, model):
     """
@@ -118,7 +125,7 @@ def print_state_tree(node, indent=""):
     if node is None:
         print(f"{indent}Invalid node (None).")
         return
-    
+
     move_info = f"Move: {node.move}" if node.move else "Initial State"
     actor_info = f"Actor: {node.actor}" if node.actor else ""
     value_info = f"Value: {node.value:.2f}" if node.value is not None else ""
@@ -138,8 +145,6 @@ def print_state_tree(node, indent=""):
         print_state_tree(child, indent + "    ")
 
 
-
-
 def move_actor(state, actor, current_pos, new_pos):
     new_state = [row[:] for row in state]  # Copiar el estado
     if current_pos:
@@ -148,7 +153,7 @@ def move_actor(state, actor, current_pos, new_pos):
     return new_state
 
 
-def choose_best_move(self, model, initial_state, is_bomberman_turn):
+def choose_best_move(model, initial_state, is_bomberman_turn):
     """
     Elige el mejor movimiento usando alfa-beta pruning.
     """
@@ -175,12 +180,18 @@ def choose_best_move(self, model, initial_state, is_bomberman_turn):
     for child_state, new_pos in possible_states:
         # Evaluar el estado hijo usando poda alfa-beta
         value, state_tree = alpha_beta_pruning_with_tree(
-            child_state, depth=1, alpha=float("-inf"), beta=float("inf"),
-            maximizing_player=is_bomberman_turn, model=model
+            child_state,
+            depth=1,
+            alpha=float("-inf"),
+            beta=float("inf"),
+            maximizing_player=is_bomberman_turn,
+            model=model,
         )
 
         # Si encontramos un mejor valor, actualizamos
-        if (is_bomberman_turn and value > best_value) or (not is_bomberman_turn and value < best_value):
+        if (is_bomberman_turn and value > best_value) or (
+            not is_bomberman_turn and value < best_value
+        ):
             best_value = value
             best_move = new_pos
             best_tree = state_tree

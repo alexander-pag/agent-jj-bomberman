@@ -9,12 +9,13 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
-    PowerAgent
+    PowerAgent,
 )
 from config.constants import *
 from algorithms.alpha_beta import manhattan_distance
 from algorithms.astar import astar_search
 import random
+
 
 class BombermanModel(Model):
     def __init__(
@@ -63,14 +64,13 @@ class BombermanModel(Model):
         self.grid.place_agent(self.balloon, self.balloon.pos)
 
         self.schedule.add(self.balloon)
-        
-        
+
         # colocar poderes aleatorios debajo de las rocas
         if self.num_powers > len(self.rocks):
             # añadir el número de poderes que se pueda
             self.num_powers = len(self.rocks)
-        
-        for _ in range(self.num_powers):             
+
+        for _ in range(self.num_powers):
             x, y = random.choice(self.rocks)
             from agents import PowerAgent
 
@@ -90,7 +90,7 @@ class BombermanModel(Model):
         Returns:
             None
         """
-        
+
         for y, row in enumerate(map_data):
             for x, terrain_type in enumerate(row):
                 if (
@@ -127,7 +127,7 @@ class BombermanModel(Model):
         # Verificar si Bomberman ha llegado a la salida
         if self.bomberman.pos == self.pos_goal:
             self.running = False
-            
+
         # verificar si bomberman ha pasado por la posición del poder
         for agent in self.grid.get_cell_list_contents(self.bomberman.pos):
             if isinstance(agent, PowerAgent):
@@ -167,27 +167,27 @@ class BombermanModel(Model):
 
     def get_state(self):
         state = [["X" for _ in range(self.width)] for _ in range(self.height)]
-        
+
         # Primero asignamos las posiciones de Bomberman (S) y Enemigos (B)
         for agent in self.schedule.agents:
             if 0 <= agent.pos[0] < self.width and 0 <= agent.pos[1] < self.height:
                 current_pos = state[agent.pos[1]][agent.pos[0]]
-                
+
                 # Asignar primero Bomberman (S)
                 if isinstance(agent, BombermanAgent):
                     if current_pos == "X":  # Solo asignar si está vacío
                         state[agent.pos[1]][agent.pos[0]] = "S"
-                
+
                 # Asignar luego los enemigos (B)
                 elif isinstance(agent, BalloonAgent):
                     if current_pos == "X":  # Solo asignar si está vacío
                         state[agent.pos[1]][agent.pos[0]] = "B"
-        
+
         # Luego asignamos el resto de los agentes (si no ocupan las casillas de Bomberman ni enemigos)
         for agent in self.schedule.agents:
             if 0 <= agent.pos[0] < self.width and 0 <= agent.pos[1] < self.height:
                 current_pos = state[agent.pos[1]][agent.pos[0]]
-                
+
                 # Solo asignar si la casilla está vacía
                 if current_pos == "X":
                     if isinstance(agent, GoalAgent):
@@ -198,8 +198,8 @@ class BombermanModel(Model):
                         state[agent.pos[1]][agent.pos[0]] = "C"
                     elif isinstance(agent, MetalAgent):
                         state[agent.pos[1]][agent.pos[0]] = "M"
-        
-        #print(f"Estado generado: {state}")  # Debug para asegurarse de que es una lista de listas
+
+        # print(f"Estado generado: {state}")  # Debug para asegurarse de que es una lista de listas
         return state
 
     def get_agent_positions(self):
@@ -224,34 +224,43 @@ class BombermanModel(Model):
 
     def get_possible_states(self, state, agent):
         # Obtener la posición del agente a partir de la clave ('S' para Bomberman, por ejemplo)
-        agent_pos = self.get_agent_positions().get("S")  # Aquí podemos asumir que "S" es la clave para Bomberman
+        agent_pos = self.get_agent_positions().get(
+            "S"
+        )  # Aquí podemos asumir que "S" es la clave para Bomberman
         possible_states = []
-        
+
         for move in self.possible_moves(agent):
             # Verificar si el movimiento es válido
             if self.is_valid_move(move, state):
                 # Crear una copia del estado actual
                 new_state = [row[:] for row in state]
-                
+
                 # Limpiar la posición actual del agente (asumimos que 'C' es césped/espacio vacío)
-                new_state[agent_pos[1]][agent_pos[0]] = 'C'
-                
+                new_state[agent_pos[1]][agent_pos[0]] = "C"
+
                 # Verificar si la nueva posición está ocupada por un obstáculo o un agente no deseado
                 current_cell = new_state[move[1]][move[0]]
-                if current_cell in ['R', 'B', 'M', 'X']:  # 'R' = roca, 'B' = enemigo, 'M' = metal
+                if current_cell in [
+                    "R",
+                    "B",
+                    "M",
+                    "X",
+                ]:  # 'R' = roca, 'B' = enemigo, 'M' = metal
                     continue  # No se puede mover a esa celda
 
                 # Colocar el agente en la nueva posición
-                new_state[move[1]][move[0]] = 'S'  # Colocar Bomberman ('S') en la nueva posición
-                
+                new_state[move[1]][
+                    move[0]
+                ] = "S"  # Colocar Bomberman ('S') en la nueva posición
+
                 # Agregar el nuevo estado al listado de posibles
-                possible_states.append((new_state, move))  # Añadir también la nueva posición
-        
+                possible_states.append(
+                    (new_state, move)
+                )  # Añadir también la nueva posición
+
         return possible_states
 
-
-    
-    def possible_moves(self,agent):
+    def possible_moves(self, agent):
         agent_pos = self.get_agent_positions()[agent]
         # Aquí deberías definir los posibles movimientos según las reglas del juego
         moves = [
@@ -266,15 +275,19 @@ class BombermanModel(Model):
         # Comprobar si la nueva posición está dentro de los límites del tablero
         if not (0 <= move[0] < len(state[0]) and 0 <= move[1] < len(state)):
             return False
-        
+
         # Comprobar si la casilla está ocupada por un obstáculo o un agente no deseado (ej. una roca o un enemigo)
         # Puedes ajustar la lógica aquí dependiendo de los elementos en el tablero
-        if state[move[1]][move[0]] in ['R', 'B', 'M', 'X']:  # 'R' = roca, 'B' = enemigo, 'M' = metal
+        if state[move[1]][move[0]] in [
+            "R",
+            "B",
+            "M",
+            "X",
+        ]:  # 'R' = roca, 'B' = enemigo, 'M' = metal
             return False
-        
+
         return True
 
-    
     def find_position(self, state, actor):
         """
         Encuentra la posición del actor en el estado dado.
@@ -282,30 +295,32 @@ class BombermanModel(Model):
         # Traducir el nombre del actor a su símbolo
         actor_symbol = ACTOR_SYMBOLS.get(actor)
         if actor_symbol is None:
-            raise ValueError(f"Actor desconocido: {actor}. Verifica el mapeo ACTOR_SYMBOLS.")
+            raise ValueError(
+                f"Actor desconocido: {actor}. Verifica el mapeo ACTOR_SYMBOLS."
+            )
 
-        #print(f"Debug - Tablero recibido en find_position:")
-        #for row in state:
+        # print(f"Debug - Tablero recibido en find_position:")
+        # for row in state:
         #    print(" ".join(row))
-        #print(f"Debug - Buscando símbolo del actor: {actor_symbol}")
+        # print(f"Debug - Buscando símbolo del actor: {actor_symbol}")
 
         # Buscar el símbolo en el tablero
         for y, row in enumerate(state):
             for x, cell in enumerate(row):
-                #print(f"Debug - Evaluando celda ({x}, {y}): {cell}")
+                # print(f"Debug - Evaluando celda ({x}, {y}): {cell}")
                 if cell == actor_symbol:
-                    #print(f"Debug - Actor encontrado en posición: ({x}, {y})")
+                    # print(f"Debug - Actor encontrado en posición: ({x}, {y})")
                     return (x, y)
-            
-        print(f"Error: Actor '{actor}' no encontrado en el tablero.")
+
+        print(f"Error: Actor '{actor}' no encontrado en el tablero {state}.")
         return None
 
-    def is_terminal_state(self,state):
+    def is_terminal_state(self, state):
         bomberman_pos = self.find_position(state, "S")
         goal_pos = self.find_position(state, "G")
         enemy_pos = self.find_position(state, "B")
         return bomberman_pos == goal_pos or bomberman_pos == enemy_pos
-    
+
     def evaluate_state(self, state, maximizing_player):
         """
         Evalúa el estado actual del juego usando A* para calcular distancias reales.
@@ -325,8 +340,8 @@ class BombermanModel(Model):
             return float("-inf")  # Derrota de Bomberman
 
         # Initialize default values for these variables
-        distance_to_goal = float('inf')
-        distance_to_enemy = float('inf')
+        distance_to_goal = float("inf")
+        distance_to_enemy = float("inf")
         progress_factor = 0
         safety_factor = 0
         score = 0
@@ -334,19 +349,23 @@ class BombermanModel(Model):
         try:
             # Camino a la meta
             path_to_goal = astar_search(
-                start=bomberman_pos, 
-                goal=goal_pos, 
-                model=self,  
-                heuristic_type=self.heuristic
-            )[0]  # Obtener solo el primer resultado (camino)
+                start=bomberman_pos,
+                goal=goal_pos,
+                model=self,
+                heuristic_type=self.heuristic,
+            )[
+                0
+            ]  # Obtener solo el primer resultado (camino)
 
             # Camino desde el enemigo
             path_from_enemy = astar_search(
-                start=enemy_pos, 
-                goal=bomberman_pos, 
-                model=self,  
-                heuristic_type=self.heuristic
-            )[0]  # Obtener solo el primer resultado (camino)
+                start=enemy_pos,
+                goal=bomberman_pos,
+                model=self,
+                heuristic_type=self.heuristic,
+            )[
+                0
+            ]  # Obtener solo el primer resultado (camino)
 
             # Calcular distancias
             distance_to_goal = len(path_to_goal) - 1
@@ -371,15 +390,21 @@ class BombermanModel(Model):
             print(f"A* search failed: {e}")
             distance_to_goal = manhattan_distance(bomberman_pos, goal_pos)
             distance_to_enemy = manhattan_distance(bomberman_pos, enemy_pos)
-            
+
             if maximizing_player:
                 score = -distance_to_goal + distance_to_enemy
             else:
                 score = -distance_to_enemy
 
-        print(f"Bomberman Position: {bomberman_pos}, Goal Position: {goal_pos}, Enemy Position: {enemy_pos}")
-        print(f"A* Distance to Goal: {distance_to_goal}, Distance to Enemy: {distance_to_enemy}")
-        print(f"Progress Factor: {progress_factor:.2f}, Safety Factor: {safety_factor:.2f}")
+        print(
+            f"Bomberman Position: {bomberman_pos}, Goal Position: {goal_pos}, Enemy Position: {enemy_pos}"
+        )
+        print(
+            f"A* Distance to Goal: {distance_to_goal}, Distance to Enemy: {distance_to_enemy}"
+        )
+        print(
+            f"Progress Factor: {progress_factor:.2f}, Safety Factor: {safety_factor:.2f}"
+        )
         print(f"Score (Heuristic): {score}")
 
         return score

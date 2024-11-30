@@ -7,6 +7,7 @@ from agents.agent_portrayal import agent_portrayal
 from models.bombermanModel import BombermanModel
 from config.constants import *
 
+
 def run_simulation():
     # Seleccionar el archivo de mapa
     map_file = select_map()
@@ -15,8 +16,8 @@ def run_simulation():
         return
 
     # Cargar los datos del mapa
-    map_data, pos_bomberman, pos_goal, pos_balloon, rocks, width, height = load_map_from_file(
-        map_file
+    map_data, pos_bomberman, pos_goal, pos_balloon, rocks, width, height = (
+        load_map_from_file(map_file)
     )
 
     # Crear el canvas

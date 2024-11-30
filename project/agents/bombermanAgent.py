@@ -52,12 +52,10 @@ class BombermanAgent(TerrainAgent):
                 print(f"Camino recalculado desde posición {self.pos}")
         else:
             self.move()
-    
-            
+
     def verify_exit(self) -> bool:
         """Verifica si Bomberman ha alcanzado la salida."""
         return self.pos == self.goal
-    
 
     def move(self) -> None:
         """Gestiona el movimiento del agente Bomberman."""
@@ -69,11 +67,11 @@ class BombermanAgent(TerrainAgent):
                 print(row)
 
             # Elegir el mejor movimiento y el nuevo estado simulado
-            next_move, child_state = choose_best_move(self, self.model, initial_state, True)
+            next_move, child_state = choose_best_move(self.model, initial_state, True)
 
             if next_move:
-                print(f"Moviendo Bomberman a {next_move}") 
-                #for row in child_state:
+                print(f"Moviendo Bomberman a {next_move}")
+                # for row in child_state:
                 #    print("".join(row))
 
                 # Realizar el movimiento
@@ -87,7 +85,6 @@ class BombermanAgent(TerrainAgent):
 
             if self.path:
                 self.follow_path()
-
 
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""

@@ -3,6 +3,7 @@ from agents.bombermanAgent import BombermanAgent
 from agents.rockAgent import RockAgent
 from agents.metalAgent import MetalAgent
 from agents.borderAgent import BorderAgent
+from algorithms.alpha_beta import choose_best_move
 
 
 class BalloonAgent(Agent):
@@ -14,15 +15,18 @@ class BalloonAgent(Agent):
         self.move()
 
     def move(self):
-        possible_steps = self.model.grid.get_neighborhood(
-            self.pos, moore=False, include_center=False
-        )
-        new_position = self.random.choice(possible_steps)
-        if not self.is_obstacle(new_position):
-            print("moviendo globo a: ", new_position)
-            self.model.grid.move_agent(self, new_position)
-            self.pos = new_position
+        initial_state = self.model.get_state()
+
+        # Elegir el mejor movimiento y el nuevo estado simulado
+        next_move, child_state = choose_best_move(self.model, initial_state, False)
+
+        if next_move:
+            print(f"--------------------------------- Moviendo Globo a {next_move}")
+            self.model.grid.move_agent(self, next_move)
+            self.pos = next_move
             self.detect_bomberman()
+        else:
+            print("No se encontró movimiento válido")
 
     def is_obstacle(self, pos):
         cellmates = self.model.grid.get_cell_list_contents([pos])
