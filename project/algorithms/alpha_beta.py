@@ -115,6 +115,10 @@ def print_state_tree(node, indent=""):
     """
     Imprime el árbol de estados de forma recursiva con detalles.
     """
+    if node is None:
+        print(f"{indent}Invalid node (None).")
+        return
+    
     move_info = f"Move: {node.move}" if node.move else "Initial State"
     actor_info = f"Actor: {node.actor}" if node.actor else ""
     value_info = f"Value: {node.value:.2f}" if node.value is not None else ""
@@ -171,7 +175,7 @@ def choose_best_move(self, model, initial_state, is_bomberman_turn):
     for child_state, new_pos in possible_states:
         # Evaluar el estado hijo usando poda alfa-beta
         value, state_tree = alpha_beta_pruning_with_tree(
-            child_state, depth=2, alpha=float("-inf"), beta=float("inf"),
+            child_state, depth=1, alpha=float("-inf"), beta=float("inf"),
             maximizing_player=is_bomberman_turn, model=model
         )
 

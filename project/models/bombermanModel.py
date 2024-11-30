@@ -13,6 +13,7 @@ from agents import (
 )
 from config.constants import *
 from algorithms.alpha_beta import manhattan_distance
+from algorithms.astar import astar_search
 import random
 
 class BombermanModel(Model):
@@ -198,7 +199,7 @@ class BombermanModel(Model):
                     elif isinstance(agent, MetalAgent):
                         state[agent.pos[1]][agent.pos[0]] = "M"
         
-        print(f"Estado generado: {state}")  # Debug para asegurarse de que es una lista de listas
+        #print(f"Estado generado: {state}")  # Debug para asegurarse de que es una lista de listas
         return state
 
     def get_agent_positions(self):
@@ -305,9 +306,9 @@ class BombermanModel(Model):
         enemy_pos = self.find_position(state, "B")
         return bomberman_pos == goal_pos or bomberman_pos == enemy_pos
     
-    def evaluate_state(self,state, maximizing_player):
+    def evaluate_state(self, state, maximizing_player):
         """
-        Evalúa el estado actual del juego con una heurística multifactorial.
+        Evalúa el estado actual del juego usando A* para calcular distancias reales.
         """
         bomberman_pos = self.find_position(state, "S")
         goal_pos = self.find_position(state, "G")
@@ -323,15 +324,62 @@ class BombermanModel(Model):
         if bomberman_pos == enemy_pos:
             return float("-inf")  # Derrota de Bomberman
 
-        # Heurística multiobjetivo
-        distance_to_goal = manhattan_distance(bomberman_pos, goal_pos)
-        distance_to_enemy = manhattan_distance(bomberman_pos, enemy_pos)
+        # Initialize default values for these variables
+        distance_to_goal = float('inf')
+        distance_to_enemy = float('inf')
+        progress_factor = 0
+        safety_factor = 0
+        score = 0
 
-        if maximizing_player:  # Turno de Bomberman
-            # Prioriza acercarse a la meta y alejarse del enemigo
-            score = -distance_to_goal * 2 + distance_to_enemy
-        else:  # Turno del globo
-            # Prioriza acercarse a Bomberman
-            score = distance_to_enemy
+        try:
+            # Camino a la meta
+            path_to_goal = astar_search(
+                start=bomberman_pos, 
+                goal=goal_pos, 
+                model=self,  
+                heuristic_type=self.heuristic
+            )[0]  # Obtener solo el primer resultado (camino)
+
+            # Camino desde el enemigo
+            path_from_enemy = astar_search(
+                start=enemy_pos, 
+                goal=bomberman_pos, 
+                model=self,  
+                heuristic_type=self.heuristic
+            )[0]  # Obtener solo el primer resultado (camino)
+
+            # Calcular distancias
+            distance_to_goal = len(path_to_goal) - 1
+            distance_to_enemy = len(path_from_enemy) - 1
+
+            # Factor de progreso: cuánto se acerca a la meta
+            progress_factor = 1 / (distance_to_goal + 1)  # Evitar división por cero
+
+            # Factor de seguridad: penalizar cercanía al enemigo
+            safety_factor = distance_to_enemy
+
+            # Lógica de maximización
+            if maximizing_player:  # Turno de Bomberman
+                # Priorizar caminos que se alejen del enemigo y acerquen a la meta
+                score = (progress_factor * 5) + (safety_factor * 10)
+            else:  # Turno del enemigo
+                # Priorizar acercarse a Bomberman
+                score = -distance_to_enemy
+
+        except Exception as e:
+            # Fallback al método original si A* falla
+            print(f"A* search failed: {e}")
+            distance_to_goal = manhattan_distance(bomberman_pos, goal_pos)
+            distance_to_enemy = manhattan_distance(bomberman_pos, enemy_pos)
+            
+            if maximizing_player:
+                score = -distance_to_goal + distance_to_enemy
+            else:
+                score = -distance_to_enemy
+
+        print(f"Bomberman Position: {bomberman_pos}, Goal Position: {goal_pos}, Enemy Position: {enemy_pos}")
+        print(f"A* Distance to Goal: {distance_to_goal}, Distance to Enemy: {distance_to_enemy}")
+        print(f"Progress Factor: {progress_factor:.2f}, Safety Factor: {safety_factor:.2f}")
+        print(f"Score (Heuristic): {score}")
 
         return score

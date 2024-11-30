@@ -72,9 +72,9 @@ class BombermanAgent(TerrainAgent):
             next_move, child_state = choose_best_move(self, self.model, initial_state, True)
 
             if next_move:
-                print(f"Moviendo Bomberman a {next_move}")
-                for row in child_state:
-                    print("".join(row))
+                print(f"Moviendo Bomberman a {next_move}") 
+                #for row in child_state:
+                #    print("".join(row))
 
                 # Realizar el movimiento
                 self.model.grid.move_agent(self, next_move)
