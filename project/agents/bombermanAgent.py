@@ -58,6 +58,9 @@ class BombermanAgent(TerrainAgent):
         return self.pos == self.goal
 
     def move(self) -> None:
+        if self.model.turn != "Bomberman":
+            return  # No es el turno del jugador
+        
         """Gestiona el movimiento del agente Bomberman."""
         print("### MOVIMIENTO DE BOMBERMAN ###")
         if self.model.search_algorithm == ALPHA_BETA:
@@ -85,6 +88,7 @@ class BombermanAgent(TerrainAgent):
 
             if self.path:
                 self.follow_path()
+        self.model.turn = "Balloon"
 
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""

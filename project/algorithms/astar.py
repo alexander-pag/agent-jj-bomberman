@@ -16,8 +16,8 @@ def astar_search(start, goal, model, heuristic_type) -> tuple:
     path_with_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=True)
     path_without_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=False)
 
-    print("path with rocks", path_with_rocks[2])
-    print("path without rocks", path_without_rocks[2])
+    #print("path with rocks", path_with_rocks[2])
+    #print("path without rocks", path_without_rocks[2])
 
     # Calculate costs
     rocks_in_path = []
@@ -87,9 +87,9 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
             path.reverse()
 
             # Print expansion tree
-            print("\nÁrbol de expansión:")
-            for node, children in expansion_tree.items():
-                print(f"{node}: {children}")
+            #print("\nÁrbol de expansión:")
+            #for node, children in expansion_tree.items():
+            #    print(f"{node}: {children}")
 
             return path, visited_order, visited_by_levels
 
@@ -131,8 +131,8 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
                 expansion_tree[current].append(neighbor)
 
     # Print expansion tree if goal not reached
-    print("\nÁrbol de expansión:")
-    for node, children in expansion_tree.items():
-        print(f"{node}: {children}")
+    #print("\nÁrbol de expansión:")
+    #for node, children in expansion_tree.items():
+    #    print(f"{node}: {children}")
 
-    return None, visited_order, visited_by_levels
+    #return None, visited_order, visited_by_levels

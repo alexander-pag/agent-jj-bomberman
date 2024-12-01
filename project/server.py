@@ -55,6 +55,7 @@ def run_simulation():
         ),
         "rocks": rocks,
         "pos_balloon": pos_balloon,
+        "turn": TURN,
     }
 
     # Configurar el servidor para visualizar la simulación

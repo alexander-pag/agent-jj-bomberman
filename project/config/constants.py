@@ -90,6 +90,8 @@ PRIORITIES = [
     "Derecha, Izquierda, Abajo, Arriba",
 ]
 
+TURN = "Bomberman"
+
 # Valores del selector de dificultades
 DIFFICULTIES = [1, 2, 3]
 

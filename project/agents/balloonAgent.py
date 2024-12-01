@@ -10,13 +10,17 @@ class BalloonAgent(Agent):
     def __init__(self, unique_id, model, start_pos):
         super().__init__(unique_id, model)
         self.pos = start_pos
+        self.model = model
 
     def step(self):
         self.move()
 
     def move(self):
+        if self.model.turn != "Balloon":
+            return  # No es el turno del globo
+        
         initial_state = self.model.get_state()
-
+        print("### MOVIMIENTO DE GLOBO ###")
         # Elegir el mejor movimiento y el nuevo estado simulado
         next_move, child_state = choose_best_move(self.model, initial_state, False)
 
@@ -27,6 +31,7 @@ class BalloonAgent(Agent):
             self.detect_bomberman()
         else:
             print("No se encontró movimiento válido")
+        self.model.turn = "Bomberman"
 
     def is_obstacle(self, pos):
         cellmates = self.model.grid.get_cell_list_contents([pos])

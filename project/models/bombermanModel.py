@@ -32,6 +32,7 @@ class BombermanModel(Model):
         powers,
         rocks,
         pos_balloon,
+        turn,
     ):
         super().__init__()
         self.width = width  # Almacenar el ancho
@@ -51,6 +52,7 @@ class BombermanModel(Model):
         self.rocks = rocks
         self.destruction_power = 1
         self.create_map(map_data)
+        self.turn = turn
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -205,9 +207,9 @@ class BombermanModel(Model):
     def get_agent_positions(self):
         positions = {}
         for agent in self.schedule.agents:
-            if agent.__class__.__name__ == "BombermanAgent":
+            if isinstance(agent, BombermanAgent):
                 positions["S"] = agent.pos
-            elif agent.__class__.__name__ == "BalloonAgent":
+            elif isinstance(agent, BalloonAgent):
                 positions["B"] = agent.pos
         return positions
 
@@ -223,41 +225,24 @@ class BombermanModel(Model):
         return new_state
 
     def get_possible_states(self, state, agent):
-        # Obtener la posición del agente a partir de la clave ('S' para Bomberman, por ejemplo)
-        agent_pos = self.get_agent_positions().get(
-            "S"
-        )  # Aquí podemos asumir que "S" es la clave para Bomberman
+        # Obtener la posición del agente a partir de la clave ('S' para Bomberman, 'B' para el enemigo)
+        agent_pos = self.get_agent_positions().get(agent)
         possible_states = []
-
         for move in self.possible_moves(agent):
             # Verificar si el movimiento es válido
             if self.is_valid_move(move, state):
                 # Crear una copia del estado actual
                 new_state = [row[:] for row in state]
-
                 # Limpiar la posición actual del agente (asumimos que 'C' es césped/espacio vacío)
                 new_state[agent_pos[1]][agent_pos[0]] = "C"
-
                 # Verificar si la nueva posición está ocupada por un obstáculo o un agente no deseado
                 current_cell = new_state[move[1]][move[0]]
-                if current_cell in [
-                    "R",
-                    "B",
-                    "M",
-                    "X",
-                ]:  # 'R' = roca, 'B' = enemigo, 'M' = metal
+                if current_cell in ["R", "B", "M", "X"]:  # 'R' = roca, 'B' = enemigo, 'M' = metal
                     continue  # No se puede mover a esa celda
-
                 # Colocar el agente en la nueva posición
-                new_state[move[1]][
-                    move[0]
-                ] = "S"  # Colocar Bomberman ('S') en la nueva posición
-
+                new_state[move[1]][move[0]] = agent  # Colocar el agente ('S' o 'B') en la nueva posición
                 # Agregar el nuevo estado al listado de posibles
-                possible_states.append(
-                    (new_state, move)
-                )  # Añadir también la nueva posición
-
+                possible_states.append((new_state, move))
         return possible_states
 
     def possible_moves(self, agent):
@@ -353,9 +338,7 @@ class BombermanModel(Model):
                 goal=goal_pos,
                 model=self,
                 heuristic_type=self.heuristic,
-            )[
-                0
-            ]  # Obtener solo el primer resultado (camino)
+            )[0]  # Obtener solo el primer resultado (camino)
 
             # Camino desde el enemigo
             path_from_enemy = astar_search(
@@ -363,9 +346,7 @@ class BombermanModel(Model):
                 goal=bomberman_pos,
                 model=self,
                 heuristic_type=self.heuristic,
-            )[
-                0
-            ]  # Obtener solo el primer resultado (camino)
+            )[0]  # Obtener solo el primer resultado (camino)
 
             # Calcular distancias
             distance_to_goal = len(path_to_goal) - 1
@@ -380,9 +361,11 @@ class BombermanModel(Model):
             # Lógica de maximización
             if maximizing_player:  # Turno de Bomberman
                 # Priorizar caminos que se alejen del enemigo y acerquen a la meta
+                print("Estableciendo prioridades para Bomberman")
                 score = (progress_factor * 5) + (safety_factor * 10)
             else:  # Turno del enemigo
                 # Priorizar acercarse a Bomberman
+                print("Priorizando movimiento del enemigo")
                 score = -distance_to_enemy
 
         except Exception as e:
