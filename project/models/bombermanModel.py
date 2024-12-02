@@ -118,7 +118,7 @@ class BombermanModel(Model):
                 self.schedule.add(cell)
 
     def step(self):
-        depth = 2
+        depth =6
         alpha = -math.inf
         beta = math.inf
         _, best_bomberman_move = self.minimax(
@@ -151,23 +151,14 @@ class BombermanModel(Model):
         is_maximizing_player,
         current_pos_bomberman,
         current_pos_balloon,
-        visited_states=None,  # Nuevo parámetro para rastrear estados
+        previous_state=None,  # Se agrega este argumento para el estado anterior
     ):
-        if visited_states is None:
-            visited_states = set()
-
-        state = (current_pos_bomberman, current_pos_balloon)
-        if state in visited_states:
-            return -math.inf if is_maximizing_player else math.inf, None  # Penalización
-
-        visited_states.add(state)
-
-        # Caso base
+        # Base case: check if we have reached a terminal state (max depth, Bomberman has won or lost)
         if depth == 0 or self.game_over(current_pos_bomberman, current_pos_balloon):
             if is_maximizing_player:
                 return (
                     self.heuristic_bomberman(
-                        current_pos_bomberman, current_pos_balloon
+                        current_pos_bomberman, current_pos_balloon, previous_state
                     ),
                     None,
                 )
@@ -190,11 +181,19 @@ class BombermanModel(Model):
             max_eval = -math.inf
             for move in bomberman_moves:
                 eval, _ = self.minimax(
-                    depth - 1, alpha, beta, False, move, current_pos_balloon
+                    depth - 1,
+                    alpha,
+                    beta,
+                    False,
+                    move,  # New position of Bomberman
+                    current_pos_balloon,
+                    previous_state=(current_pos_bomberman, current_pos_balloon),  # Pasar el estado anterior
                 )
                 if eval > max_eval:
                     max_eval = eval
                     best_move = move
+                elif eval == max_eval:  # Si hay empate, selecciona aleatoriamente
+                    best_move = random.choice([best_move, move])
                 alpha = max(alpha, eval)
                 if beta <= alpha:
                     break
@@ -203,26 +202,37 @@ class BombermanModel(Model):
             min_eval = math.inf
             for move in balloon_moves:
                 eval, _ = self.minimax(
-                    depth - 1, alpha, beta, True, current_pos_bomberman, move
+                    depth - 1,
+                    alpha,
+                    beta,
+                    True,
+                    current_pos_bomberman,
+                    move,  # New position of Balloon
+                    previous_state=(current_pos_bomberman, current_pos_balloon),  # Pasar el estado anterior
                 )
                 if eval < min_eval:
                     min_eval = eval
                     best_move = move
+                elif eval == min_eval:  # Si hay empate, selecciona aleatoriamente
+                    best_move = random.choice([best_move, move])
                 beta = min(beta, eval)
                 if beta <= alpha:
                     break
             return min_eval, best_move
 
-    def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloon):
+
+    def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloon, previous_state=None):
         dist_to_goal = self.manhattan_distance(current_pos_bomberman, self.pos_goal)
-        dist_to_balloon = self.manhattan_distance(
-            current_pos_bomberman, current_pos_balloon
-        )
-        # Penalización por retroceder
-        penalty = (
-            10 if current_pos_bomberman in self.visited_cells else 0
-        )
+        dist_to_balloon = self.manhattan_distance(current_pos_bomberman, current_pos_balloon)
+
+        penalty = 0
+        if previous_state is not None:
+            # Penalizar si estamos repitiendo el estado
+            if (current_pos_bomberman, current_pos_balloon) == previous_state:
+                penalty = 10  # Puedes ajustar el valor de la penalización
+
         return -dist_to_goal * 4 + dist_to_balloon * 5 - penalty
+
 
 
     def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
