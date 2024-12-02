@@ -54,6 +54,8 @@ class BombermanModel(Model):
         self.destruction_power = 1
         self.create_map(map_data)
         self.turn = turn
+        self.history = []  # Historial de posiciones recientes del Bomberman
+        self.history_length = 5  # Longitud del historial, ajustable
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -118,7 +120,7 @@ class BombermanModel(Model):
                 self.schedule.add(cell)
 
     def step(self):
-        depth =6
+        depth =4
         alpha = -math.inf
         beta = math.inf
         _, best_bomberman_move = self.minimax(
@@ -220,20 +222,26 @@ class BombermanModel(Model):
                     break
             return min_eval, best_move
 
-
     def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloon, previous_state=None):
         dist_to_goal = self.manhattan_distance(current_pos_bomberman, self.pos_goal)
         dist_to_balloon = self.manhattan_distance(current_pos_bomberman, current_pos_balloon)
-
+        
         penalty = 0
         if previous_state is not None:
             # Penalizar si estamos repitiendo el estado
             if (current_pos_bomberman, current_pos_balloon) == previous_state:
-                penalty = 10  # Puedes ajustar el valor de la penalización
+                penalty = 10
+        
+        # Penalizar si el Bomberman regresa a una posición que ya visitó recientemente
+        if current_pos_bomberman in self.history:
+            penalty += 20  # Penalización fuerte por moverse a una posición repetida
+        
+        # Agregar la posición actual al historial
+        self.history.append(current_pos_bomberman)
+        if len(self.history) > self.history_length:
+            self.history.pop(0)  # Mantener el historial dentro del límite de longitud
 
         return -dist_to_goal * 4 + dist_to_balloon * 5 - penalty
-
-
 
     def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
         # Heuristic for Balloon: distance to Bomberman
