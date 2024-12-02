@@ -118,7 +118,7 @@ class BombermanModel(Model):
                 self.schedule.add(cell)
 
     def step(self):
-        depth = 6  # Puedes ajustar la profundidad según tus necesidades
+        depth = 2
         alpha = -math.inf
         beta = math.inf
         _, best_bomberman_move = self.minimax(
@@ -130,13 +130,15 @@ class BombermanModel(Model):
 
         # Move Bomberman and Balloon
         if best_bomberman_move:
+            self.visited_cells.append(self.bomberman.pos)  # Registrar celda visitada
             self.bomberman.move_to(best_bomberman_move)
         if best_balloon_move:
             self.balloon.move_to(best_balloon_move)
 
-        # Check if Bomberman has won or lost
+        # Check game over
         if self.game_over(self.bomberman.pos, self.balloon.pos):
             self.running = False
+
 
     def next_id(self) -> int:
         return super().next_id()
@@ -149,8 +151,18 @@ class BombermanModel(Model):
         is_maximizing_player,
         current_pos_bomberman,
         current_pos_balloon,
+        visited_states=None,  # Nuevo parámetro para rastrear estados
     ):
-        # Base case: check if we have reached a terminal state (max depth, Bomberman has won or lost)
+        if visited_states is None:
+            visited_states = set()
+
+        state = (current_pos_bomberman, current_pos_balloon)
+        if state in visited_states:
+            return -math.inf if is_maximizing_player else math.inf, None  # Penalización
+
+        visited_states.add(state)
+
+        # Caso base
         if depth == 0 or self.game_over(current_pos_bomberman, current_pos_balloon):
             if is_maximizing_player:
                 return (
@@ -206,8 +218,12 @@ class BombermanModel(Model):
         dist_to_balloon = self.manhattan_distance(
             current_pos_bomberman, current_pos_balloon
         )
-        # Penalizar estar lejos de la meta y estar cerca del globo
-        return -dist_to_goal * 4 + dist_to_balloon * 5
+        # Penalización por retroceder
+        penalty = (
+            10 if current_pos_bomberman in self.visited_cells else 0
+        )
+        return -dist_to_goal * 4 + dist_to_balloon * 5 - penalty
+
 
     def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
         # Heuristic for Balloon: distance to Bomberman
