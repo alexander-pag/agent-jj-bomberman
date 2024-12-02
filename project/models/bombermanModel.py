@@ -1,5 +1,4 @@
 from mesa import Model
-from mesa.time import RandomActivation
 from mesa.space import MultiGrid
 from agents import (
     BombermanAgent,
@@ -15,28 +14,13 @@ from config.constants import *
 from algorithms.alpha_beta import manhattan_distance
 from algorithms.astar import astar_search
 import random
-
+from schedulers.customScheduler import CustomScheduler
 
 class BombermanModel(Model):
-    def __init__(
-        self,
-        width,
-        height,
-        map_data,
-        pos_goal,
-        pos_bomberman,
-        number_of_agents,
-        search_algorithm,
-        priority,
-        heuristic,
-        powers,
-        rocks,
-        pos_balloon,
-        turn,
-    ):
+    def __init__(self, width, height, map_data, pos_goal, pos_bomberman, number_of_agents, search_algorithm, priority, heuristic, powers, rocks, pos_balloon, turn):
         super().__init__()
-        self.width = width  # Almacenar el ancho
-        self.height = height  # Almacenar la altura
+        self.width = width
+        self.height = height
         self.num_agents = number_of_agents
         self.search_algorithm = search_algorithm
         self.heuristic = heuristic
@@ -44,7 +28,7 @@ class BombermanModel(Model):
         self.final_path_cells = set()
         self.visited_ground_cells = set()
         self.grid = MultiGrid(width, height, torus=False)
-        self.schedule = RandomActivation(self)
+        self.schedule = CustomScheduler(self)  # Usar el programador personalizado
         self.running = True
         self.priority = priority
         self.pos_goal = pos_goal
@@ -55,27 +39,19 @@ class BombermanModel(Model):
         self.turn = turn
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
-
         self.grid.place_agent(self.bomberman, self.bomberman.pos)
-
         self.schedule.add(self.bomberman)
 
-        # añadir los globos al modelo
         self.balloon = BalloonAgent(self.next_id(), self, pos_balloon)
-
         self.grid.place_agent(self.balloon, self.balloon.pos)
-
         self.schedule.add(self.balloon)
 
         # colocar poderes aleatorios debajo de las rocas
         if self.num_powers > len(self.rocks):
-            # añadir el número de poderes que se pueda
             self.num_powers = len(self.rocks)
 
         for _ in range(self.num_powers):
             x, y = random.choice(self.rocks)
-            from agents import PowerAgent
-
             power = PowerAgent(self.next_id(), self, (x, y))
             self.grid.place_agent(power, (x, y))
             self.schedule.add(power)
