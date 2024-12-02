@@ -1,5 +1,5 @@
 X, X, X, X, X, X, X, X, X, X
-X, B, M, C, C, C, M, C, C, X
+X, B, M, C, C, C, M, B, C, X
 X, C, M, M, C, C, M, C, C, X
 X, C, M, C, M, C, M, M, C, X
 X, C, M, C, C, C, C, M, C, X

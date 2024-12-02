@@ -63,12 +63,12 @@ class BombermanModel(Model):
 
         self.schedule.add(self.bomberman)
 
-        # añadir los globos al modelo
-        self.balloon = BalloonAgent(self.next_id(), self, pos_balloon)
-
-        self.grid.place_agent(self.balloon, self.balloon.pos)
-
-        self.schedule.add(self.balloon)
+        self.balloons = []  # Lista para almacenar múltiples globos
+        for pos in pos_balloon:  # Recorrer la lista de posiciones
+            balloon = BalloonAgent(self.next_id(), self, pos)
+            self.balloons.append(balloon)
+            self.grid.place_agent(balloon, pos)
+            self.schedule.add(balloon)
 
         # colocar poderes aleatorios debajo de las rocas
         if self.num_powers > len(self.rocks):
@@ -120,26 +120,34 @@ class BombermanModel(Model):
                 self.schedule.add(cell)
 
     def step(self):
-        depth =4
+        depth = 6
         alpha = -math.inf
         beta = math.inf
+
+        # Decidir el mejor movimiento para Bomberman
         _, best_bomberman_move = self.minimax(
-            depth, alpha, beta, True, self.bomberman.pos, self.balloon.pos
-        )
-        _, best_balloon_move = self.minimax(
-            depth, alpha, beta, False, self.bomberman.pos, self.balloon.pos
+            depth, alpha, beta, True, self.bomberman.pos, [balloon.pos for balloon in self.balloons]
         )
 
-        # Move Bomberman and Balloon
+        # Mover Bomberman
         if best_bomberman_move:
-            self.visited_cells.append(self.bomberman.pos)  # Registrar celda visitada
+            self.visited_cells.append(self.bomberman.pos)
             self.bomberman.move_to(best_bomberman_move)
-        if best_balloon_move:
-            self.balloon.move_to(best_balloon_move)
 
-        # Check game over
-        if self.game_over(self.bomberman.pos, self.balloon.pos):
+        for balloon in self.balloons:
+            # Evaluar el mejor movimiento para cada globo de manera independiente
+            _, best_balloon_move = self.minimax(
+                depth, alpha, beta, False, self.bomberman.pos, [balloon.pos]
+            )  # Pasar solo la posición del globo actual
+            if best_balloon_move:
+                balloon.move_to(best_balloon_move)  # Mover el globo a la posición determinada
+
+
+
+        # Verificar si el juego ha terminado
+        if self.game_over(self.bomberman.pos, [balloon.pos for balloon in self.balloons]):
             self.running = False
+
 
 
     def next_id(self) -> int:
@@ -152,30 +160,34 @@ class BombermanModel(Model):
         beta,
         is_maximizing_player,
         current_pos_bomberman,
-        current_pos_balloon,
-        previous_state=None,  # Se agrega este argumento para el estado anterior
+        current_pos_balloons,
+        previous_state=None,
     ):
-        # Base case: check if we have reached a terminal state (max depth, Bomberman has won or lost)
-        if depth == 0 or self.game_over(current_pos_bomberman, current_pos_balloon):
+        # Verifica el formato de current_pos_balloons antes de pasarlo a minimax
+        #print(f"Tipo de current_pos_balloons: {type(current_pos_balloons)}")
+        #print(f"Contenido de current_pos_balloons: {current_pos_balloons}")
+
+        if depth == 0 or self.game_over(current_pos_bomberman, current_pos_balloons):
             if is_maximizing_player:
                 return (
                     self.heuristic_bomberman(
-                        current_pos_bomberman, current_pos_balloon, previous_state
+                        current_pos_bomberman, current_pos_balloons, previous_state
                     ),
                     None,
                 )
             else:
+                # Balloon heuristic: sum of distances to Bomberman
                 return (
-                    self.heuristic_balloon(current_pos_bomberman, current_pos_balloon),
+                    sum(
+                        self.heuristic_balloon(current_pos_bomberman, balloon_pos)
+                        for balloon_pos in current_pos_balloons
+                    ),
                     None,
                 )
 
         # Get the possible moves for Bomberman and Balloon
         bomberman_moves = self.get_possible_moves(
             current_pos_bomberman, is_maximizing_player
-        )
-        balloon_moves = self.get_possible_moves(
-            current_pos_balloon, not is_maximizing_player
         )
 
         best_move = None
@@ -188,8 +200,8 @@ class BombermanModel(Model):
                     beta,
                     False,
                     move,  # New position of Bomberman
-                    current_pos_balloon,
-                    previous_state=(current_pos_bomberman, current_pos_balloon),  # Pasar el estado anterior
+                    current_pos_balloons,  # Pasar todas las posiciones de los globos
+                    previous_state=(current_pos_bomberman, current_pos_balloons),  # Pasar el estado anterior completo
                 )
                 if eval > max_eval:
                     max_eval = eval
@@ -200,52 +212,58 @@ class BombermanModel(Model):
                 if beta <= alpha:
                     break
             return max_eval, best_move
-        else:  # Balloon (Minimizer)
+        else:  # Balloons (Minimizer)
             min_eval = math.inf
-            for move in balloon_moves:
-                eval, _ = self.minimax(
-                    depth - 1,
-                    alpha,
-                    beta,
-                    True,
-                    current_pos_bomberman,
-                    move,  # New position of Balloon
-                    previous_state=(current_pos_bomberman, current_pos_balloon),  # Pasar el estado anterior
-                )
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = move
-                elif eval == min_eval:  # Si hay empate, selecciona aleatoriamente
-                    best_move = random.choice([best_move, move])
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    break
-            return min_eval, best_move
+            best_move = None  # Necesitas inicializar best_move para los globos correctamente
+            for balloon_idx, balloon_pos in enumerate(current_pos_balloons):
+                for move in self.get_possible_moves(balloon_pos, not is_maximizing_player):
+                    new_positions = current_pos_balloons.copy()  # Copia la lista de posiciones de los globos
+                    new_positions[balloon_idx] = move  # Actualiza la posición del globo correspondiente
+                    eval, _ = self.minimax(
+                        depth - 1,
+                        alpha,
+                        beta,
+                        True,
+                        current_pos_bomberman,
+                        new_positions,  # Pasar las nuevas posiciones de los globos
+                        previous_state=(current_pos_bomberman, current_pos_balloons),  # Estado previo
+                    )
+                    if eval < min_eval:
+                        min_eval = eval
+                        best_move = new_positions  # Guardar el mejor conjunto de posiciones
+                    elif eval == min_eval:  # Si hay empate, selecciona aleatoriamente
+                        best_move = random.choice([best_move, new_positions])
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break
+            return min_eval, best_move  # Aquí debes retornar el conjunto de movimientos de los globos
 
-    def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloon, previous_state=None):
+
+
+
+    def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloons, previous_state=None):
         dist_to_goal = self.manhattan_distance(current_pos_bomberman, self.pos_goal)
-        dist_to_balloon = self.manhattan_distance(current_pos_bomberman, current_pos_balloon)
+        dist_to_balloons = sum(
+            self.manhattan_distance(current_pos_bomberman, pos) for pos in current_pos_balloons
+        )
         
         penalty = 0
         if previous_state is not None:
-            # Penalizar si estamos repitiendo el estado
-            if (current_pos_bomberman, current_pos_balloon) == previous_state:
+            if (current_pos_bomberman, tuple(current_pos_balloons)) == previous_state:
                 penalty = 10
-        
-        # Penalizar si el Bomberman regresa a una posición que ya visitó recientemente
+
         if current_pos_bomberman in self.history:
-            penalty += 20  # Penalización fuerte por moverse a una posición repetida
-        
-        # Agregar la posición actual al historial
+            penalty += 20
+
         self.history.append(current_pos_bomberman)
         if len(self.history) > self.history_length:
-            self.history.pop(0)  # Mantener el historial dentro del límite de longitud
+            self.history.pop(0)
 
-        return -dist_to_goal * 4 + dist_to_balloon * 5 - penalty
+        return -dist_to_goal * 4 + dist_to_balloons * 5 - penalty
 
     def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
-        # Heuristic for Balloon: distance to Bomberman
         return self.manhattan_distance(current_pos_balloon, current_pos_bomberman)
+
 
     def get_possible_moves(self, current_pos, is_bomberman):
         # This method returns the valid neighboring positions
@@ -259,23 +277,26 @@ class BombermanModel(Model):
         return valid_moves
 
     def is_valid_move(self, position, is_bomberman):
-        # Check if a move is valid based on the terrain and whether it's Bomberman or Balloon
+        # Verifica si un movimiento es válido
         cell = self.grid.get_cell_list_contents(position)
         if any(isinstance(agent, BorderAgent) for agent in cell):
             return False
         if any(isinstance(agent, MetalAgent) for agent in cell):
             return False
-        if is_bomberman and any(isinstance(agent, BalloonAgent) for agent in cell):
+        if is_bomberman and position in self.balloons:
             return False
         return True
+
 
     def manhattan_distance(self, pos1, pos2):
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
-    def game_over(self, current_pos_bomberman, current_pos_balloon):
-        # Check if the game is over: Bomberman reaches the goal or is caught by the Balloon
+    def game_over(self, current_pos_bomberman, current_pos_balloons):
+        # Bomberman alcanza la meta o es atrapado por un globo
         if current_pos_bomberman == self.pos_goal:
             return True
-        if current_pos_bomberman == current_pos_balloon:
+        if any(current_pos_bomberman == pos for pos in current_pos_balloons):
             return True
         return False
+
+

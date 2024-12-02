@@ -16,19 +16,18 @@ def load_map_from_file(file_path):
 
 def get_special_positions(map_data) -> tuple:
     """
-    Obtiene las posiciones de Bomberman y la salida del mapa.
+    Obtiene las posiciones de Bomberman, la salida, los globos y las rocas del mapa.
 
     Args:
         map_data: Lista de listas que representa el mapa.
 
     Returns:
-        Tupla con las posiciones de Bomberman y la salida
+        Tupla con las posiciones de Bomberman, la salida, los globos y las rocas.
     """
     pos_bomberman = None
     pos_goal = None
-    pos_balloon = None
-    # posiciones de las celdas de rocas
-    rocks = []
+    pos_balloons = []  # Lista para manejar múltiples globos
+    rocks = []  # Lista para las posiciones de rocas
     for y, row in enumerate(map_data):
         for x, cell in enumerate(row):
             if cell == BOMBERMAN:
@@ -36,8 +35,9 @@ def get_special_positions(map_data) -> tuple:
             elif cell == GOAL:
                 pos_goal = (x, y)
             elif cell == BALLOON:
-                pos_balloon = (x, y)
+                pos_balloons.append((x, y))  # Añadir posición a la lista
             elif cell == ROCK:
                 print(f"Roca encontrada en: {x}, {y}")
                 rocks.append((x, y))
-    return pos_bomberman, pos_goal, pos_balloon, rocks
+    return pos_bomberman, pos_goal, pos_balloons, rocks
+
