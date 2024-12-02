@@ -1,9 +1,17 @@
-X, X, X, X, X, X, X, X, X, X
-X, B, M, C, C, C, M, B, C, X
-X, C, M, M, C, C, M, C, C, X
-X, C, M, C, M, C, M, M, C, X
-X, C, M, C, C, C, C, M, C, X
-X, C, M, M, C, M, M, M, C, X
-X, C, C, C, C, C, C, C, C, X
-X, S, M, M, C, C, M, M, G, X
-X, X, X, X, X, X, X, X, X, X
+X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X
+X, B, C, C, C, C, M, C, C, C, C, C, C, C, C, C, C, C, C, X
+X, C, M, C, M, C, C, M, C, C, C, M, C, C, C, C, C, C, G, X
+X, S, M, C, M, C, M, C, M, C, C, C, C, M, C, C, C, C, C, X
+X, C, M, M, C, C, C, C, C, C, M, M, C, C, C, C, C, C, C, X
+X, C, M, C, C, C, M, C, M, M, C, C, C, C, C, C, C, C, C, X
+X, C, M, M, M, M, C, M, M, C, M, M, C, C, C, C, C, C, C, X
+X, C, C, C, C, C, C, C, M, C, C, M, M, M, C, C, C, C, C, X
+X, C, M, C, M, C, C, M, C, C, M, C, C, C, C, C, C, C, C, X
+X, C, C, C, C, C, C, C, C, M, C, M, M, C, C, C, C, C, C, X
+X, M, M, C, M, C, M, M, C, C, M, M, C, C, C, C, C, C, C, X
+X, C, M, C, M, C, C, C, M, C, C, M, C, C, C, C, C, C, C, X
+X, C, C, M, C, M, C, M, M, C, M, M, M, C, C, C, C, C, C, X
+X, M, C, C, C, M, C, M, M, C, C, C, C, C, C, C, C, C, C, X
+X, C, M, M, M, C, C, C, C, C, C, C, M, C, C, C, C, C, C, X
+X, C, C, M, M, C, C, C, M, M, M, M, C, C, C, C, C, C, C, X
+X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X

@@ -242,11 +242,27 @@ class BombermanModel(Model):
 
 
     def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloons, previous_state=None):
+        # Distancia a la meta
         dist_to_goal = self.manhattan_distance(current_pos_bomberman, self.pos_goal)
+        
+        # Calcular la distancia total a los globos
         dist_to_balloons = sum(
-            self.manhattan_distance(current_pos_bomberman, pos) for pos in current_pos_balloons
+            self.manhattan_distance(current_pos_bomberman, balloon_pos) 
+            for balloon_pos in current_pos_balloons
         )
         
+        # Calcular la distancia mínima a los globos
+        min_dist_to_balloons = min(
+            self.manhattan_distance(current_pos_bomberman, balloon_pos) 
+            for balloon_pos in current_pos_balloons
+        )
+        
+        # Penalizar fuertemente si la distancia a los globos es muy baja
+        balloon_penalty = 0
+        if min_dist_to_balloons <= 2:  # Ajusta este umbral según necesites
+            balloon_penalty = (3 - min_dist_to_balloons) * 50  # Penalización progresiva
+        
+        # Penalización adicional por repetir posiciones
         penalty = 0
         if previous_state is not None:
             if (current_pos_bomberman, tuple(current_pos_balloons)) == previous_state:
@@ -259,7 +275,8 @@ class BombermanModel(Model):
         if len(self.history) > self.history_length:
             self.history.pop(0)
 
-        return -dist_to_goal * 4 + dist_to_balloons * 5 - penalty
+        # Combinar las diferentes penalizaciones y heurísticas
+        return -dist_to_goal * 4 + dist_to_balloons * 5 - penalty - balloon_penalty
 
     def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
         return self.manhattan_distance(current_pos_balloon, current_pos_bomberman)
@@ -279,13 +296,25 @@ class BombermanModel(Model):
     def is_valid_move(self, position, is_bomberman):
         # Verifica si un movimiento es válido
         cell = self.grid.get_cell_list_contents(position)
+        
+        # Prohibir moverse al borde
         if any(isinstance(agent, BorderAgent) for agent in cell):
             return False
+
+        # Prohibir moverse a una celda con metal
         if any(isinstance(agent, MetalAgent) for agent in cell):
             return False
-        if is_bomberman and position in self.balloons:
+        
+        # Prohibir que Bomberman se mueva a una celda ocupada por un globo
+        if is_bomberman and any(isinstance(agent, BalloonAgent) for agent in cell):
             return False
+
+        # Prohibir que los globos se muevan hacia Bomberman
+        if not is_bomberman and any(isinstance(agent, BombermanAgent) for agent in cell):
+            return False
+        
         return True
+
 
 
     def manhattan_distance(self, pos1, pos2):
