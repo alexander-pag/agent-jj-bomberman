@@ -1,5 +1,10 @@
-X, X, X, X, X, X, X, X, X
-X, B, C, C, C, C, C, C, X
-X, C, M, M, M, M, M, G, X
-X, S, C, C, C, C, C, C, X
-X, X, X, X, X, X, X, X, X
+X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X
+X, S, C, C, C, C, C, C, C, C, C, C, C, C, C, M, X
+X, C, M, M, C, M, M, M, C, M, M, M, M, M, C, M, X
+X, C, M, C, C, C, C, C, C, C, C, C, C, C, C, C, X
+X, C, M, C, M, M, M, M, M, M, C, M, M, M, M, B, X
+X, C, M, C, C, C, C, C, C, C, C, C, C, C, C, C, X
+X, C, M, M, C, M, M, M, M, M, M, M, M, C, M, M, X
+X, C, M, M, C, C, C, C, C, C, C, C, C, G, M, M, X
+X, C, C, C, C, M, M, M, M, M, M, M, M, M, M, M, X
+X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X

@@ -4,9 +4,11 @@ from config.constants import *
 import logging
 from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
+from agents.metalAgent import MetalAgent
 from agents.explosionAgent import ExplosionAgent
 from algorithms.alpha_beta import choose_best_move, alpha_beta_pruning_with_tree
 from .terrainAgent import TerrainAgent
+import random
 
 
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +53,7 @@ class BombermanAgent(TerrainAgent):
                 self.calculate_path()  # Usamos el método existente
                 print(f"Camino recalculado desde posición {self.pos}")
         else:
-            self.move()
+            self.move_to(self.pos)
 
     def verify_exit(self) -> bool:
         """Verifica si Bomberman ha alcanzado la salida."""
@@ -60,7 +62,7 @@ class BombermanAgent(TerrainAgent):
     def move(self) -> None:
         if self.model.turn != "Bomberman":
             return  # No es el turno del jugador
-        
+
         """Gestiona el movimiento del agente Bomberman."""
         print("### MOVIMIENTO DE BOMBERMAN ###")
         if self.model.search_algorithm == ALPHA_BETA:
@@ -216,3 +218,43 @@ class BombermanAgent(TerrainAgent):
             print("Explosión completada y retroceso terminado, recalculando ruta")
             return True
         return False
+
+    def move_to(self, new_pos):
+        """
+        Mueve a Bomberman a la nueva posición new_pos.
+        """
+        if not self.is_obstacle(new_pos):
+            self.model.grid.move_agent(self, new_pos)
+            self.pos = new_pos
+            return True
+        return False
+
+    def is_obstacle(self, pos):
+        """
+        Verifica si hay un obstáculo en la posición pos.
+        """
+        cellmates = self.model.grid.get_cell_list_contents([pos])
+        for agent in cellmates:
+            if isinstance(agent, RockAgent) or isinstance(agent, MetalAgent):
+                return True
+        return False
+
+    def make_risky_move(self):
+        # Esta función fuerza a un agente a tomar una decisión más arriesgada
+        # Esto puede ser mover de manera aleatoria o intentar romper un ciclo
+        neighbors = self.model.grid.get_neighborhood(
+            self.pos, moore=False, include_center=False
+        )
+        random_move = random.choice(neighbors)  # Hacer un movimiento aleatorio
+        self.move_to(random_move)
+
+    def random_move(self):
+        """
+        Realiza un movimiento aleatorio.
+        """
+        neighbors = self.model.grid.get_neighborhood(
+            self.pos, moore=False, include_center=False
+        )
+        random_move = random.choice(neighbors)
+        self.move_to(random_move)
+        return random_move

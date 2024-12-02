@@ -4,6 +4,7 @@ from agents.rockAgent import RockAgent
 from agents.metalAgent import MetalAgent
 from agents.borderAgent import BorderAgent
 from algorithms.alpha_beta import choose_best_move
+import random
 
 
 class BalloonAgent(Agent):
@@ -13,12 +14,12 @@ class BalloonAgent(Agent):
         self.model = model
 
     def step(self):
-        self.move()
+        self.move_to(self.pos)
 
     def move(self):
         if self.model.turn != "Balloon":
             return  # No es el turno del globo
-        
+
         initial_state = self.model.get_state()
         print("### MOVIMIENTO DE GLOBO ###")
         # Elegir el mejor movimiento y el nuevo estado simulado
@@ -40,7 +41,6 @@ class BalloonAgent(Agent):
                 isinstance(agent, BorderAgent)
                 or isinstance(agent, RockAgent)
                 or isinstance(agent, MetalAgent)
-                or isinstance(agent, BalloonAgent)
             ):
                 return True
         return False
@@ -53,3 +53,20 @@ class BalloonAgent(Agent):
                 print("¡Bomberman ha sido capturado!")
                 self.model.running = False
                 break
+
+    def move_to(self, new_pos):
+        if not self.is_obstacle(new_pos):
+            self.model.grid.move_agent(self, new_pos)
+            self.pos = new_pos
+            self.detect_bomberman()
+            return True
+        return False
+
+    def move_randomly(self):
+        possible_steps = self.model.grid.get_neighborhood(
+            self.pos, moore=True, include_center=False
+        )
+        new_position = random.choice(possible_steps)
+        self.move_to(new_position)
+        self.detect_bomberman()
+        return True

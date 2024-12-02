@@ -1,0 +1,123 @@
+import math
+
+class BombermanModel(Model):
+    def __init__(self, width, height, map_data, pos_goal, pos_bomberman, number_of_agents, search_algorithm, priority, heuristic, powers, rocks, pos_balloon):
+        super().__init__()
+        self.width = width
+        self.height = height
+        self.num_agents = number_of_agents
+        self.search_algorithm = search_algorithm
+        self.heuristic = heuristic
+        self.visited_cells = []
+        self.final_path_cells = set()
+        self.visited_ground_cells = set()
+        self.grid = MultiGrid(width, height, torus=False)
+        self.schedule = RandomActivation(self)
+        self.running = True
+        self.priority = priority
+        self.pos_goal = pos_goal
+        self.num_powers = powers
+        self.rocks = rocks
+        self.destruction_power = 1
+        self.create_map(map_data)
+
+        self.bomberman = BombermanAgent(1, self, pos_bomberman)
+        self.grid.place_agent(self.bomberman, self.bomberman.pos)
+        self.schedule.add(self.bomberman)
+
+        # añadir los globos al modelo
+        self.balloon = BalloonAgent(self.next_id(), self, pos_balloon)
+        self.grid.place_agent(self.balloon, self.balloon.pos)
+        self.schedule.add(self.balloon)
+
+    def minimax(self, depth, alpha, beta, is_maximizing_player, current_pos_bomberman, current_pos_balloon):
+        # Base case: check if we have reached a terminal state (max depth, Bomberman has won or lost)
+        if depth == 0 or self.game_over(current_pos_bomberman, current_pos_balloon):
+            return self.heuristic_bomberman(current_pos_bomberman, current_pos_balloon), None
+
+        # Get the possible moves for Bomberman and Balloon
+        bomberman_moves = self.get_possible_moves(current_pos_bomberman, is_maximizing_player)
+        balloon_moves = self.get_possible_moves(current_pos_balloon, not is_maximizing_player)
+
+        best_move = None
+        if is_maximizing_player:  # Bomberman (Maximizer)
+            max_eval = -math.inf
+            for move in bomberman_moves:
+                eval, _ = self.minimax(depth - 1, alpha, beta, False, move, current_pos_balloon)
+                if eval > max_eval:
+                    max_eval = eval
+                    best_move = move
+                alpha = max(alpha, eval)
+                if beta <= alpha:
+                    break
+            return max_eval, best_move
+        else:  # Balloon (Minimizer)
+            min_eval = math.inf
+            for move in balloon_moves:
+                eval, _ = self.minimax(depth - 1, alpha, beta, True, current_pos_bomberman, move)
+                if eval < min_eval:
+                    min_eval = eval
+                    best_move = move
+                beta = min(beta, eval)
+                if beta <= alpha:
+                    break
+            return min_eval, best_move
+
+    def heuristic_bomberman(self, current_pos_bomberman, current_pos_balloon):
+        # Heuristic for Bomberman: distance to goal - distance from balloon
+        dist_to_goal = self.manhattan_distance(current_pos_bomberman, self.pos_goal)
+        dist_to_balloon = self.manhattan_distance(current_pos_bomberman, current_pos_balloon)
+        return dist_to_goal - dist_to_balloon
+
+    def heuristic_balloon(self, current_pos_bomberman, current_pos_balloon):
+        # Heuristic for Balloon: distance to Bomberman
+        return self.manhattan_distance(current_pos_balloon, current_pos_bomberman)
+
+    def get_possible_moves(self, current_pos, is_bomberman):
+        # This method returns the valid neighboring positions
+        neighbors = self.grid.get_neighborhood(current_pos, moore=False, include_center=False)
+        valid_moves = []
+        for neighbor in neighbors:
+            if self.is_valid_move(neighbor, is_bomberman):
+                valid_moves.append(neighbor)
+        return valid_moves
+
+    def is_valid_move(self, position, is_bomberman):
+        # Check if a move is valid based on the terrain and whether it's Bomberman or Balloon
+        cell = self.grid.get_cell_list_contents(position)
+        if any(isinstance(agent, BorderAgent) for agent in cell):
+            return False
+        if any(isinstance(agent, MetalAgent) for agent in cell):
+            return False
+        if is_bomberman and any(isinstance(agent, BalloonAgent) for agent in cell):
+            return False
+        return True
+
+    def manhattan_distance(self, pos1, pos2):
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+    def game_over(self, current_pos_bomberman, current_pos_balloon):
+        # Check if the game is over: Bomberman reaches the goal or is caught by the Balloon
+        if current_pos_bomberman == self.pos_goal:
+            return True
+        if current_pos_bomberman == current_pos_balloon:
+            return True
+        return False
+
+    def step(self):
+        # Run a step in the game with Minimax and Alpha-Beta pruning
+        depth = 3  # Set a reasonable depth for Minimax
+        alpha = -math.inf
+        beta = math.inf
+        _, best_bomberman_move = self.minimax(depth, alpha, beta, True, self.bomberman.pos, self.balloon.pos)
+        _, best_balloon_move = self.minimax(depth, alpha, beta, False, self.bomberman.pos, self.balloon.pos)
+        
+        # Move Bomberman and Balloon
+        if best_bomberman_move:
+            self.bomberman.move(best_bomberman_move)
+        if best_balloon_move:
+            self.balloon.move(best_balloon_move)
+
+        # Check if Bomberman has won or lost
+        if self.game_over(self.bomberman.pos, self.balloon.pos):
+            self.running = False

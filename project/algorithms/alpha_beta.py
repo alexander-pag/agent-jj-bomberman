@@ -181,7 +181,7 @@ def choose_best_move(model, initial_state, is_bomberman_turn):
         # Evaluar el estado hijo usando poda alfa-beta
         value, state_tree = alpha_beta_pruning_with_tree(
             child_state,
-            depth=1,
+            depth=4,
             alpha=float("-inf"),
             beta=float("inf"),
             maximizing_player=is_bomberman_turn,
@@ -206,5 +206,3 @@ def choose_best_move(model, initial_state, is_bomberman_turn):
 
     # Retornar el mejor movimiento y el estado simulado
     return best_move, model.simulate_move(initial_state, agent, best_move)
-
-

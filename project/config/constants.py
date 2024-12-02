@@ -60,9 +60,9 @@ ACTOR_SYMBOLS = {
     "Bomberman": "S",
     "Enemy": "B",
     "Goal": "G",
-    "S":"S",
-    "B":"B",
-    "G":"G",
+    "S": "S",
+    "B": "B",
+    "G": "G",
 }
 
 
@@ -119,7 +119,5 @@ PROJECT_DESCRIPTION = """Proyecto de la asignatura de Sistemas Inteligentes 1. E
                         """
 
 # Ruta por defecto donde se abrirá el explorador de archivos
-DEFAULT_DIRECTORY_JHAIR = (
-    "C:/Users/USUARIO/Documents/Universidad/2024-2/inteligentes1/project/assets/maps"
-)
+DEFAULT_DIRECTORY_JHAIR = "C:/Users/USUARIO/Documents/Universidad/2024-2/inteligentes1/agent-jj-bomberman/project/assets\maps"
 DEFAULT_DIRECTORY_JUAN = "/ruta/a/tu/carpeta/de/mapas"
