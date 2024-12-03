@@ -72,7 +72,7 @@ MAP_SELECTOR_TITLE = "Mapa"
 HEURISTIC_SELECTOR_TITLE = "Heurística"
 PRIORITY_SELECTOR_TITLE = "Prioridad"
 BALLOONS_SELECTOR_TITLE = "Número de enemigos"
-DIFICULTY_SELECTOR_TITLE = "Dificultad"
+DIFFICULTY_SELECTOR_TITLE = "Dificultad"
 NUMBER_POWERS_SELECTOR_TITLE = "Número de poderes"
 
 # Valores del selector de heurísticas

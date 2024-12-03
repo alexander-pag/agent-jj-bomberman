@@ -53,6 +53,11 @@ def run_simulation():
             value=NUMBER_POWERS[0],
             choices=NUMBER_POWERS,
         ),
+        "difficulty": Choice(
+            name=DIFFICULTY_SELECTOR_TITLE,
+            value=DIFFICULTIES[0],
+            choices=DIFFICULTIES,
+        ),
         "rocks": rocks,
         "pos_balloon": pos_balloon,
         "turn": TURN,

@@ -31,6 +31,7 @@ class BombermanModel(Model):
         priority,
         heuristic,
         powers,
+        difficulty,
         rocks,
         pos_balloon,
         turn,
@@ -51,6 +52,7 @@ class BombermanModel(Model):
         self.pos_goal = pos_goal
         self.num_powers = powers
         self.rocks = rocks
+        self.difficulty = difficulty
         self.destruction_power = 1
         self.create_map(map_data)
         self.turn = turn
@@ -127,7 +129,7 @@ class BombermanModel(Model):
                 self.schedule.add(cell)
 
     def step(self):
-        depth = 6
+        depth = 2 * self.difficulty
         alpha = -math.inf
         beta = math.inf
 
