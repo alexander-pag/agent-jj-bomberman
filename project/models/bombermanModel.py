@@ -9,11 +9,8 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
-    PowerAgent,
 )
 from config.constants import *
-from algorithms.alpha_beta import manhattan_distance
-from algorithms.astar import astar_search
 import random
 import math
 
@@ -37,8 +34,8 @@ class BombermanModel(Model):
         turn,
     ):
         super().__init__()
-        self.width = width  # Almacenar el ancho
-        self.height = height  # Almacenar la altura
+        self.width = width  
+        self.height = height 
         self.num_agents = number_of_agents
         self.search_algorithm = search_algorithm
         self.heuristic = heuristic
@@ -56,8 +53,8 @@ class BombermanModel(Model):
         self.destruction_power = 1
         self.create_map(map_data)
         self.turn = turn
-        self.history = []  # Historial de posiciones recientes del Bomberman
-        self.history_length = 5  # Longitud del historial, ajustable
+        self.history = []  
+        self.history_length = 5 
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -65,23 +62,20 @@ class BombermanModel(Model):
 
         self.schedule.add(self.bomberman)
 
-        self.balloons = []  # Lista para almacenar múltiples globos
-        for pos in pos_balloon:  # Recorrer la lista de posiciones
+        self.balloons = []  
+        for pos in pos_balloon:  
             balloon = BalloonAgent(self.next_id(), self, pos)
             self.balloons.append(balloon)
             self.grid.place_agent(balloon, pos)
             self.schedule.add(balloon)
 
-        # colocar poderes aleatorios debajo de las rocas
         if self.num_powers > len(self.rocks):
-            # añadir el número de poderes que se pueda
             self.num_powers = len(self.rocks)
 
         for _ in range(self.num_powers):
             x, y = random.choice(self.rocks)
             from agents import PowerAgent
 
-            # si ya hay un poder en esa posición, buscar otra
             while any(
                 isinstance(agent, PowerAgent)
                 for agent in self.grid.get_cell_list_contents((x, y))
@@ -124,46 +118,71 @@ class BombermanModel(Model):
                 else:
                     continue
 
-                # Colocar el agente en la posición correcta
                 self.grid.place_agent(cell, (x, y))
                 self.schedule.add(cell)
 
     def step(self):
-        depth = 2 * self.difficulty
-        alpha = -math.inf
-        beta = math.inf
+        from agents.powerAgent import PowerAgent
+        
+        self.schedule.step()
+        
+        agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
 
-        # Decidir el mejor movimiento para Bomberman
-        _, best_bomberman_move = self.minimax(
-            depth,
-            alpha,
-            beta,
-            True,
-            self.bomberman.pos,
-            [balloon.pos for balloon in self.balloons],
-        )
+        for a in agents_in_cell:
+            if isinstance(a, BalloonAgent):
+                print("Bomberman ha sido derrotado")
+                self.running = False
 
-        # Mover Bomberman
-        if best_bomberman_move:
-            self.visited_cells.append(self.bomberman.pos)
-            self.bomberman.move_to(best_bomberman_move)
+         # verificar si bomberman ha pasado por la posición del poder
+        for agent in self.grid.get_cell_list_contents(self.bomberman.pos):
+            if isinstance(agent, PowerAgent):
+                print("################# Bomberman ha obtenido un poder ###########")
+                self.destruction_power += 1
+                self.grid.remove_agent(agent)
+                self.schedule.remove(agent)
+                break
 
-        for balloon in self.balloons:
-            # Evaluar el mejor movimiento para cada globo de manera independiente
-            _, best_balloon_move = self.minimax(
-                depth, alpha, beta, False, self.bomberman.pos, [balloon.pos]
-            )  # Pasar solo la posición del globo actual
-            if best_balloon_move:
-                balloon.move_to(
-                    best_balloon_move
-                )  # Mover el globo a la posición determinada
-
-        # Verificar si el juego ha terminado
-        if self.game_over(
-            self.bomberman.pos, [balloon.pos for balloon in self.balloons]
-        ):
+        # Verificar si Bomberman ha llegado a la salida
+        if self.bomberman.pos == self.pos_goal:
             self.running = False
+        
+        if self.search_algorithm == ALPHA_BETA:
+            depth = 2 * self.difficulty
+            alpha = -math.inf
+            beta = math.inf
 
+            # Decidir el mejor movimiento para Bomberman
+            _, best_bomberman_move = self.minimax(
+                depth,
+                alpha,
+                beta,
+                True,
+                self.bomberman.pos,
+                [balloon.pos for balloon in self.balloons],
+            )
+
+            # Mover Bomberman
+            if best_bomberman_move:
+                self.visited_cells.append(self.bomberman.pos)
+                self.bomberman.move_to(best_bomberman_move)
+
+            for balloon in self.balloons:
+                # Evaluar el mejor movimiento para cada globo de manera independiente
+                _, best_balloon_move = self.minimax(
+                    depth, alpha, beta, False, self.bomberman.pos, [balloon.pos]
+                )  # Pasar solo la posición del globo actual
+                if best_balloon_move:
+                    balloon.move_to(
+                        best_balloon_move
+                    )  # Mover el globo a la posición determinada
+
+            # Verificar si el juego ha terminado
+            if self.game_over(
+                self.bomberman.pos, [balloon.pos for balloon in self.balloons]
+            ):
+                self.running = False
+
+        
     def next_id(self) -> int:
         return super().next_id()
 

@@ -3,8 +3,8 @@ from agents.bombermanAgent import BombermanAgent
 from agents.rockAgent import RockAgent
 from agents.metalAgent import MetalAgent
 from agents.borderAgent import BorderAgent
-from algorithms.alpha_beta import choose_best_move
 import random
+from config.constants import ALPHA_BETA
 
 
 class BalloonAgent(Agent):
@@ -17,22 +17,7 @@ class BalloonAgent(Agent):
         self.move_to(self.pos)
 
     def move(self):
-        if self.model.turn != "Balloon":
-            return  # No es el turno del globo
-
-        initial_state = self.model.get_state()
-        print("### MOVIMIENTO DE GLOBO ###")
-        # Elegir el mejor movimiento y el nuevo estado simulado
-        next_move, child_state = choose_best_move(self.model, initial_state, False)
-
-        if next_move:
-            print(f"--------------------------------- Moviendo Globo a {next_move}")
-            self.model.grid.move_agent(self, next_move)
-            self.pos = next_move
-            self.detect_bomberman()
-        else:
-            print("No se encontró movimiento válido")
-        self.model.turn = "Bomberman"
+        pass
 
     def is_obstacle(self, pos):
         print(f"Checking position in is_obstacle: {pos}")  # Depuración
@@ -62,24 +47,35 @@ class BalloonAgent(Agent):
                 break
 
     def move_to(self, new_pos):
-        if isinstance(new_pos, list):
-            # Si new_pos es una lista de posiciones, movemos cada globo por separado
-            for pos in new_pos:
-                if not self.is_obstacle(pos):
-                    self.model.grid.move_agent(self, pos)
-                    self.pos = pos
+        if self.model.search_algorithm == ALPHA_BETA:
+            if isinstance(new_pos, list):
+                # Si new_pos es una lista de posiciones, movemos cada globo por separado
+                for pos in new_pos:
+                    if not self.is_obstacle(pos):
+                        self.model.grid.move_agent(self, pos)
+                        self.pos = pos
+                        self.detect_bomberman()
+                        return True  # Si al menos uno se movió correctamente, retornamos True
+            else:
+                # Si es una sola posición, la movemos directamente
+                if not self.is_obstacle(new_pos):
+                    self.model.grid.move_agent(self, new_pos)
+                    self.pos = new_pos
                     self.detect_bomberman()
-                    return True  # Si al menos uno se movió correctamente, retornamos True
+                    return True
+
+            return False  # Si no se pudo mover
+
         else:
-            # Si es una sola posición, la movemos directamente
-            if not self.is_obstacle(new_pos):
-                self.model.grid.move_agent(self, new_pos)
-                self.pos = new_pos
+            possible_steps = self.model.grid.get_neighborhood(
+                self.pos, moore=False, include_center=False
+            )
+            new_position = self.random.choice(possible_steps)
+            if not self.is_obstacle(new_position):
+                print("moviendo globo a: ", new_position)
+                self.model.grid.move_agent(self, new_position)
+                self.pos = new_position
                 self.detect_bomberman()
-                return True
-
-        return False  # Si no se pudo mover
-
 
     def move_randomly(self):
         possible_steps = self.model.grid.get_neighborhood(
