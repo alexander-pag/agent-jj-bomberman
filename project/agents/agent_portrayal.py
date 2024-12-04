@@ -45,7 +45,7 @@ def explosion_portrayal():
     return {
         "Shape": get_image_path(IMG_EXPLOSION),
         "Filled": "true",
-        "Layer": 3,  
+        "Layer": 3,
         "w": 1,
         "h": 1,
         "scale": 1.0,
@@ -57,7 +57,7 @@ def bomb_portrayal():
         "Shape": get_image_path(IMG_BOMB),
         "Filled": "true",
         "Layer": 1,
-        "scale": 0.7,  
+        "scale": 0.7,
         "Color": "red",
     }
 
@@ -127,7 +127,7 @@ def goal_portrayal():
         "w": 1,
         "h": 1,
     }
-    
+
 
 def power_portrayal():
     return {

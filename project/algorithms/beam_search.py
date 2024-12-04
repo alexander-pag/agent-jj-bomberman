@@ -110,13 +110,17 @@ def find_path(
 
     while current_nodes:
         next_nodes = []
-        expanded_nodes = [pos for pos, _ in current_nodes if pos not in expanded_nodes_in_path]
-        
+        expanded_nodes = [
+            pos for pos, _ in current_nodes if pos not in expanded_nodes_in_path
+        ]
+
         # Registra solo nodos de expansión en el nivel actual
         if expanded_nodes:
             visited_by_levels[level] = expanded_nodes
             expanded_nodes_in_path.update(expanded_nodes)
-            visited_order.extend(expanded_nodes)  # Agrega los nodos de expansión al orden de visita
+            visited_order.extend(
+                expanded_nodes
+            )  # Agrega los nodos de expansión al orden de visita
 
         for current_pos, path in current_nodes:
             if current_pos == goal_pos:

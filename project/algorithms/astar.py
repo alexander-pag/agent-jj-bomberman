@@ -6,6 +6,7 @@ from helpers.calculate_path import *
 
 costos = []
 
+
 def astar_search(start, goal, model, heuristic_type) -> tuple:
     """A* search comparing paths with and without rocks."""
     from agents import RockAgent
@@ -13,11 +14,15 @@ def astar_search(start, goal, model, heuristic_type) -> tuple:
     global costos
 
     # Find both paths
-    path_with_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=True)
-    path_without_rocks = find_path(start, goal, model, heuristic_type, costos, allow_rocks=False)
+    path_with_rocks = find_path(
+        start, goal, model, heuristic_type, costos, allow_rocks=True
+    )
+    path_without_rocks = find_path(
+        start, goal, model, heuristic_type, costos, allow_rocks=False
+    )
 
-    #print("path with rocks", path_with_rocks[2])
-    #print("path without rocks", path_without_rocks[2])
+    # print("path with rocks", path_with_rocks[2])
+    # print("path without rocks", path_without_rocks[2])
 
     # Calculate costs
     rocks_in_path = []
@@ -47,6 +52,7 @@ def astar_search(start, goal, model, heuristic_type) -> tuple:
     if cost_with_rocks < cost_without_rocks:
         return path_with_rocks[0], path_with_rocks[1], rocks_in_path
     return path_without_rocks[0], path_without_rocks[1], []
+
 
 def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
     """Helper function to find path with A*."""
@@ -87,8 +93,8 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
             path.reverse()
 
             # Print expansion tree
-            #print("\nÁrbol de expansión:")
-            #for node, children in expansion_tree.items():
+            # print("\nÁrbol de expansión:")
+            # for node, children in expansion_tree.items():
             #    print(f"{node}: {children}")
 
             return path, visited_order, visited_by_levels
@@ -96,7 +102,7 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
         neighbors = get_neighbors_by_priority(
             model.grid.get_neighborhood(current, moore=False, include_center=False),
             current,
-            model.priority
+            model.priority,
         )
 
         for index, neighbor in enumerate(neighbors):
@@ -104,9 +110,13 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
                 continue
 
             cell_contents = model.grid.get_cell_list_contents([neighbor])
-            if any(isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents):
+            if any(
+                isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents
+            ):
                 continue
-            if not allow_rocks and any(isinstance(agent, RockAgent) for agent in cell_contents):
+            if not allow_rocks and any(
+                isinstance(agent, RockAgent) for agent in cell_contents
+            ):
                 continue
 
             # Calcular el g_score temporal
@@ -116,10 +126,14 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
             if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative_g_score
-                
+
                 # Ajuste de prioridad basado en el índice del vecino
-                priority_adjustment = (index + 1) * 0.0001  # Pequeño ajuste según el orden en neighbors
-                f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal) + priority_adjustment
+                priority_adjustment = (
+                    index + 1
+                ) * 0.0001  # Pequeño ajuste según el orden en neighbors
+                f_score[neighbor] = (
+                    tentative_g_score + heuristic(neighbor, goal) + priority_adjustment
+                )
 
                 # Agregar a open_set respetando el orden de `model.priority`
                 heapq.heappush(open_set, (f_score[neighbor], neighbor))
@@ -131,8 +145,8 @@ def find_path(start, goal, model, heuristic_type, costos, allow_rocks=False):
                 expansion_tree[current].append(neighbor)
 
     # Print expansion tree if goal not reached
-    #print("\nÁrbol de expansión:")
-    #for node, children in expansion_tree.items():
+    # print("\nÁrbol de expansión:")
+    # for node, children in expansion_tree.items():
     #    print(f"{node}: {children}")
 
-    #return None, visited_order, visited_by_levels
+    return None, visited_order, visited_by_levels

@@ -36,9 +36,9 @@ class BombAgent(Agent):
 
         # Direcciones ortogonales
         directions = [
-            (1, 0),   # Abajo
+            (1, 0),  # Abajo
             (-1, 0),  # Arriba
-            (0, 1),   # Derecha
+            (0, 1),  # Derecha
             (0, -1),  # Izquierda
         ]
 
@@ -46,6 +46,7 @@ class BombAgent(Agent):
         for dx, dy in directions:
             current_pos = self.pos
             for step in range(1, self.power + 1):
+                # Calcular la nueva posición
                 next_pos = (current_pos[0] + dx, current_pos[1] + dy)
 
                 # Verificar límites de la cuadrícula
@@ -59,7 +60,10 @@ class BombAgent(Agent):
                 cell_contents = self.model.grid.get_cell_list_contents(next_pos)
 
                 # Detener propagación si hay un obstáculo (Metal o Border)
-                if any(isinstance(agent, (MetalAgent, BorderAgent)) for agent in cell_contents):
+                if any(
+                    isinstance(agent, (MetalAgent, BorderAgent))
+                    for agent in cell_contents
+                ):
                     break
 
                 # Manejar rocas
@@ -79,6 +83,9 @@ class BombAgent(Agent):
                 # Agregar explosión en la posición actual
                 explosion = ExplosionAgent(self.model.next_id(), self.model)
                 changes.append(("add_explosion", explosion, next_pos))
+
+                # Actualizar la posición actual
+                current_pos = next_pos
 
         # Aplicar cambios de forma atómica
         for action, agent, pos in changes:

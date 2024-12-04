@@ -1,16 +1,11 @@
 from mesa import Agent
 from algorithms import *
 from config.constants import *
-import logging
 from agents.rockAgent import RockAgent
 from agents.bombAgent import BombAgent
 from agents.metalAgent import MetalAgent
 from agents.explosionAgent import ExplosionAgent
 import random
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class BombermanAgent(Agent):
@@ -58,19 +53,15 @@ class BombermanAgent(Agent):
         return self.pos == self.goal
 
     def move(self) -> None:
-            if self.path is None or not self.path:
-                self.calculate_path()
+        if self.path is None or not self.path:
+            self.calculate_path()
 
-            if self.path:
-                self.follow_path()
+        if self.path:
+            self.follow_path()
 
     def calculate_path(self) -> None:
         """Calcula el camino hacia la meta utilizando el algoritmo seleccionado."""
         algorithm = self.algorithms.get(self.model.search_algorithm)
-
-        logger.info(
-            f"Ejecutando juego con: {self.model.search_algorithm} y prioridad: {self.model.priority}. {self.model.heuristic}"
-        )
 
         if algorithm and self.model.search_algorithm != ALPHA_BETA:
             result = (
@@ -85,30 +76,14 @@ class BombermanAgent(Agent):
             elif len(result) == 2:
                 self.path, visited_order = result
                 self.rocks = []  # Inicializa rocks si no se devolvió
-            else:
-                logger.error(
-                    f"El algoritmo {self.model.search_algorithm} devolvió un número inesperado de valores: {len(result)}"
-                )
-                return
 
-            print("Las rocas son: ", self.rocks)
+            # Guardar el orden en que se visitaron los nodos
+            self.model.visited_cells = [
+                (pos, idx + 1) for idx, pos in enumerate(visited_order)
+            ]
 
-            if self.path is None:
-                logger.warning(
-                    f"No se encontró un camino desde {self.pos} hasta {self.goal}"
-                )
-            else:
-                # Guardar el orden en que se visitaron los nodos
-                self.model.visited_cells = [
-                    (pos, idx + 1) for idx, pos in enumerate(visited_order)
-                ]
-
-                # Guardar las celdas que son parte del camino final
-                self.model.final_path_cells = set(self.path)
-        else:
-            logger.error(
-                f"Algoritmo de búsqueda desconocido: {self.model.search_algorithm}"
-            )
+            # Guardar las celdas que son parte del camino final
+            self.model.final_path_cells = set(self.path)
 
     def follow_path(self) -> None:
         """Sigue el camino calculado, moviéndose a la siguiente posición."""
@@ -196,11 +171,11 @@ class BombermanAgent(Agent):
         Mueve a Bomberman a la nueva posición new_pos.
         """
         if self.path is None or not self.path:
-                self.calculate_path()
+            self.calculate_path()
 
         if self.path:
             self.follow_path()
-        
+
         if self.model.search_algorithm == ALPHA_BETA:
             if not self.is_obstacle(new_pos):
                 self.model.grid.move_agent(self, new_pos)
@@ -217,23 +192,3 @@ class BombermanAgent(Agent):
             if isinstance(agent, RockAgent) or isinstance(agent, MetalAgent):
                 return True
         return False
-
-    def make_risky_move(self):
-        # Esta función fuerza a un agente a tomar una decisión más arriesgada
-        # Esto puede ser mover de manera aleatoria o intentar romper un ciclo
-        neighbors = self.model.grid.get_neighborhood(
-            self.pos, moore=False, include_center=False
-        )
-        random_move = random.choice(neighbors)  # Hacer un movimiento aleatorio
-        self.move_to(random_move)
-
-    def random_move(self):
-        """
-        Realiza un movimiento aleatorio.
-        """
-        neighbors = self.model.grid.get_neighborhood(
-            self.pos, moore=False, include_center=False
-        )
-        random_move = random.choice(neighbors)
-        self.move_to(random_move)
-        return random_move
