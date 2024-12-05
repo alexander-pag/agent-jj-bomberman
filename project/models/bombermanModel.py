@@ -55,6 +55,7 @@ class BombermanModel(Model):
         self.turn = turn
         self.history = []  
         self.history_length = 5 
+        self.cantNodosPodados = 0
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -147,7 +148,8 @@ class BombermanModel(Model):
             self.running = False
         
         if self.search_algorithm == ALPHA_BETA:
-            depth = 2 * self.difficulty
+            #depth = 2 * self.difficulty
+            depth = 5
             alpha = -math.inf
             beta = math.inf
 
@@ -160,6 +162,9 @@ class BombermanModel(Model):
                 self.bomberman.pos,
                 [balloon.pos for balloon in self.balloons],
             )
+            
+            print(f"Cantidad de nodos podados =  {self.cantNodosPodados}")
+            self.cantNodosPodados = 0
 
             # Mover Bomberman
             if best_bomberman_move:
@@ -246,6 +251,7 @@ class BombermanModel(Model):
                     best_move = random.choice([best_move, move])
                 alpha = max(alpha, eval)
                 if beta <= alpha:
+                    self.cantNodosPodados += 1
                     break
             return max_eval, best_move
         else:  # Balloons (Minimizer)
@@ -284,6 +290,7 @@ class BombermanModel(Model):
                         best_move = random.choice([best_move, new_positions])
                     beta = min(beta, eval)
                     if beta <= alpha:
+                        self.cantNodosPodados += 1
                         break
             return (
                 min_eval,

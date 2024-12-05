@@ -1,0 +1,6 @@
+1. Se crea una variable self.cantNodosPodados, inicializada en 0. En el archivo bombermanModel.py en su constructor.
+2. En el metodo step() despues de la linea 150 se cambia el valor de depth a 5, depth = 5
+3. En el método minmax() despues de la linea 253 se incrementa el valor de cantNodosPodados en +1.
+4. En el método minmax() despues de la linea 292 se incrementa el valor de cantNodosPodados en +1. Igual que la anterior instruccion
+5. Metodo step() despues de la linea 165 se muestra en consola la cantidad de nodos podados.
+6. Luego de la linea 165 modificada en el paso anterior se resetea la variable de self.cantNodosPodados a 0.
