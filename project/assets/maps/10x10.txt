@@ -1,6 +1,7 @@
-X, X, X, X, X, X, X
-X, M, M, M, M, M, X
-X, M, C, C, S, M, X
-X, M, R, M, M, C, X
-X, C, C, R, G, C, X
-X, X, X, X, X, X, X
+X, X, X, X, X, X, X, X, X
+X, S, C, C, M, C, C, C, X
+X, C, M, C, C, C, M, C, X
+X, C, C, M, M, C, M, G, X
+X, C, M, C, C, C, M, C, X
+X, C, C, M, C, C, C, C, X
+X, X, X, X, X, X, X, X, X

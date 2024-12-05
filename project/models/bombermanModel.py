@@ -55,6 +55,8 @@ class BombermanModel(Model):
         self.turn = turn
         self.history = []  
         self.history_length = 5 
+        self.numero_nodos_podados_bomberman = 0
+        self.numero_nodos_podados_globo = 0
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -147,7 +149,7 @@ class BombermanModel(Model):
             self.running = False
         
         if self.search_algorithm == ALPHA_BETA:
-            depth = 2 * self.difficulty
+            depth = 5
             alpha = -math.inf
             beta = math.inf
 
@@ -175,6 +177,11 @@ class BombermanModel(Model):
                     balloon.move_to(
                         best_balloon_move
                     )  # Mover el globo a la posición determinada
+            
+            print(f"La cantidad de nodos podados para bomberman fueron: {self.numero_nodos_podados_bomberman}")
+           # print(f"La cantidad de nodos podados para el globo fueron: {self.numero_nodos_podados_globo}")
+            
+            self.numero_nodos_podados_bomberman = 0
 
             # Verificar si el juego ha terminado
             if self.game_over(
@@ -246,6 +253,7 @@ class BombermanModel(Model):
                     best_move = random.choice([best_move, move])
                 alpha = max(alpha, eval)
                 if beta <= alpha:
+                    self.numero_nodos_podados_bomberman += 1
                     break
             return max_eval, best_move
         else:  # Balloons (Minimizer)
@@ -284,6 +292,7 @@ class BombermanModel(Model):
                         best_move = random.choice([best_move, new_positions])
                     beta = min(beta, eval)
                     if beta <= alpha:
+                        self.numero_nodos_podados_bomberman += 1
                         break
             return (
                 min_eval,

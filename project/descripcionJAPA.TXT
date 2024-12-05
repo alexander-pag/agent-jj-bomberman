@@ -1,0 +1,21 @@
+** NOTA: Toda la sustencación se realizó en el mismo archivo.
+
+* Toda la lógica que maneja al algoritmo de minimax con poda alfa-beta se encuentra en la ruta
+./project/models/bombermanModel.py
+
+* En el constructor del modelo declare una variable llamada "self.numero_nodos_podados_bomberman"
+en la línea 58
+
+* En el constructor del modelo declare una variable llamada "self.numero_nodos_podados_globo"
+en la línea 59
+
+* Minmax con poda alfa-beta se ejecuta desde la funcion step del modelo siempre y cuando desde la
+interfaz se seleccione dicho algoritmo
+
+* En la línea 181 imprimo por consola el valor que tenga al finalizar la ejecución del código, la 
+variable "self.numero_nodos_podados_bomberman"
+
+* En la línea 254 y 295 voy incrementando esta variable de 1
+
+* En la línea 184 reseteo esta variable para que en cada movimiento se calcule el número de nodos 
+podados en cada step.
