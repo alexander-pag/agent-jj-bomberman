@@ -9,6 +9,7 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
+    BombAgent,
 )
 from config.constants import *
 import random
@@ -123,29 +124,21 @@ class BombermanModel(Model):
 
     def step(self):
         from agents.powerAgent import PowerAgent
-        
         self.schedule.step()
         
         agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
 
+        # Verificar si Bomberman se encuentra con un globo
         for a in agents_in_cell:
             if isinstance(a, BalloonAgent):
                 print("Bomberman ha sido derrotado")
                 self.running = False
 
-         # verificar si bomberman ha pasado por la posición del poder
-        for agent in self.grid.get_cell_list_contents(self.bomberman.pos):
-            if isinstance(agent, PowerAgent):
-                print("################# Bomberman ha obtenido un poder ###########")
-                self.destruction_power += 1
-                self.grid.remove_agent(agent)
-                self.schedule.remove(agent)
-                break
-
         # Verificar si Bomberman ha llegado a la salida
         if self.bomberman.pos == self.pos_goal:
             self.running = False
         
+        # Ejecutar el algoritmo de búsqueda seleccionado
         if self.search_algorithm == ALPHA_BETA:
             depth = 2 * self.difficulty
             alpha = -math.inf
@@ -161,10 +154,16 @@ class BombermanModel(Model):
                 [balloon.pos for balloon in self.balloons],
             )
 
-            # Mover Bomberman
+            # Manejar la destrucción de rocas
             if best_bomberman_move:
-                self.visited_cells.append(self.bomberman.pos)
+                target_cell = self.grid.get_cell_list_contents(best_bomberman_move)
+                for agent in target_cell:
+                    if isinstance(agent, RockAgent):
+                        bomb_agent = BombAgent(self.next_id(), self, self.bomberman.pos)
+                        self.grid.place_agent(bomb_agent, self.bomberman.pos)
+                        self.schedule.add(bomb_agent)
                 self.bomberman.move_to(best_bomberman_move)
+
 
             for balloon in self.balloons:
                 # Evaluar el mejor movimiento para cada globo de manera independiente
@@ -354,6 +353,10 @@ class BombermanModel(Model):
         # Prohibir moverse a una celda con metal
         if any(isinstance(agent, MetalAgent) for agent in cell):
             return False
+        
+        # Permitir que Bomberman se mueva hacia rocas, pero no otros agentes
+        if any(isinstance(agent, RockAgent) for agent in cell):
+            return is_bomberman  # Solo Bomberman puede moverse a rocas
 
         # Prohibir que Bomberman se mueva a una celda ocupada por un globo
         if is_bomberman and any(isinstance(agent, BalloonAgent) for agent in cell):
@@ -366,6 +369,10 @@ class BombermanModel(Model):
             return False
 
         return True
+    
+    def contains_rock(self, position):
+        cell = self.grid.get_cell_list_contents(position)
+        return any(isinstance(agent, RockAgent) for agent in cell)
 
     def manhattan_distance(self, pos1, pos2):
         return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])

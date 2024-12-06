@@ -3,6 +3,7 @@ from agents.bombermanAgent import BombermanAgent
 from agents.rockAgent import RockAgent
 from agents.metalAgent import MetalAgent
 from agents.borderAgent import BorderAgent
+from agents.explosionAgent import ExplosionAgent  # Asegúrate de importar ExplosionAgent
 import random
 from config.constants import ALPHA_BETA
 
@@ -37,12 +38,24 @@ class BalloonAgent(Agent):
                 return True
         return False
 
-    # detectar si hay un bomberman en la misma posición que el globo y terminar la simulación
+    # Detectar si hay un Bomberman en la misma posición que el globo y terminar la simulación
     def detect_bomberman(self):
         cellmates = self.model.grid.get_cell_list_contents([self.pos])
         for agent in cellmates:
             if isinstance(agent, BombermanAgent):
                 print("¡Bomberman ha sido capturado!")
+                self.model.running = False
+                break
+
+    # Detectar si hay una explosión en la misma posición y destruir el globo
+    def detect_explosion(self):
+        cellmates = self.model.grid.get_cell_list_contents([self.pos])
+        for agent in cellmates:
+            if isinstance(agent, ExplosionAgent):
+                print(f"Globo destruido en posición {self.pos}")
+                self.model.grid.remove_agent(self)
+                self.model.schedule.remove(self)
+                print("¡El globo ha sido asesinado!")
                 self.model.running = False
                 break
 
@@ -55,6 +68,7 @@ class BalloonAgent(Agent):
                         self.model.grid.move_agent(self, pos)
                         self.pos = pos
                         self.detect_bomberman()
+                        self.detect_explosion()
                         return True  # Si al menos uno se movió correctamente, retornamos True
             else:
                 # Si es una sola posición, la movemos directamente
@@ -62,6 +76,7 @@ class BalloonAgent(Agent):
                     self.model.grid.move_agent(self, new_pos)
                     self.pos = new_pos
                     self.detect_bomberman()
+                    self.detect_explosion()
                     return True
 
             return False  # Si no se pudo mover
@@ -76,6 +91,7 @@ class BalloonAgent(Agent):
                 self.model.grid.move_agent(self, new_position)
                 self.pos = new_position
                 self.detect_bomberman()
+                self.detect_explosion()
 
     def move_randomly(self):
         possible_steps = self.model.grid.get_neighborhood(
@@ -84,4 +100,5 @@ class BalloonAgent(Agent):
         new_position = random.choice(possible_steps)
         self.move_to(new_position)
         self.detect_bomberman()
+        self.detect_explosion()
         return True
