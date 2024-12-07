@@ -6,6 +6,7 @@ from ui.map_selector import select_map
 from agents.agent_portrayal import agent_portrayal
 from models.bombermanModel import BombermanModel
 from config.constants import *
+import os
 
 
 def run_simulation():
@@ -73,4 +74,7 @@ def run_simulation():
 
 
 if __name__ == "__main__":
+    for file in os.listdir("./project/tree_expansion"):
+        os.remove(os.path.join("./project/tree_expansion", file))
+
     run_simulation()

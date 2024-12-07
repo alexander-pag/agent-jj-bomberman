@@ -165,9 +165,9 @@ class BombermanModel(Model):
                 visualizer=visualizer,  # Pasar el visualizador
             )
 
-            # Guardar el árbol de búsqueda en un archivo
-            filename = f"tree_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            visualizer.save(filename)
+            # Guardar el árbol de búsqueda en una carpeta tree_expansion
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            visualizer.save(f"./project/tree_expansion/tree_{timestamp}")
 
             # Mover Bomberman
             if best_bomberman_move:
