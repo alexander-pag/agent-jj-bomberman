@@ -36,7 +36,7 @@ def run_simulation():
         "number_of_agents": 1,
         "search_algorithm": Choice(
             name=ALGORITHM_SELECTOR_TITLE,
-            value=ALGORITHMS[0],
+            value=ALGORITHMS[-1],
             choices=ALGORITHMS,
         ),
         "priority": Choice(
@@ -56,7 +56,7 @@ def run_simulation():
         ),
         "difficulty": Choice(
             name=DIFFICULTY_SELECTOR_TITLE,
-            value=DIFFICULTIES[0],
+            value=DIFFICULTIES[1],
             choices=DIFFICULTIES,
         ),
         "rocks": rocks,

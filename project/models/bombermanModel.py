@@ -16,6 +16,7 @@ import random
 import math
 from helpers.tree_visualizer import TreeVisualizer
 from datetime import datetime
+import os
 
 
 class BombermanModel(Model):
@@ -60,6 +61,7 @@ class BombermanModel(Model):
         self.history_length = 5
         self.waiting_for_bomb = False
         self.bomb_wait_turns = 0
+        self.numero_de_nodos_podados = 0
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -129,8 +131,13 @@ class BombermanModel(Model):
     def step(self):
         from agents.powerAgent import PowerAgent
 
+        # borrar archivos de árboles de búsqueda si existen
+        if os.path.exists("./project/tree_expansion"):
+            for file in os.listdir("./project/tree_expansion"):
+                os.remove(os.path.join("./project/tree_expansion", file))
+
         # Inicializar atributos de espera de bomba si no existen
-        if not hasattr(self.bomberman, 'waiting_for_bomb'):
+        if not hasattr(self.bomberman, "waiting_for_bomb"):
             self.bomberman.waiting_for_bomb = False
             self.bomberman.bomb_wait_turns = 0
 
@@ -149,20 +156,22 @@ class BombermanModel(Model):
         # Verificar si está esperando la explosión de una bomba
         if bomberman.waiting_for_bomb:
             bomberman.bomb_wait_turns -= 1
-            print(f"DEBUG: Waiting for bomb explosion. Turns left: {bomberman.bomb_wait_turns}")
-            
+            print(
+                f"DEBUG: Waiting for bomb explosion. Turns left: {bomberman.bomb_wait_turns}"
+            )
+
             if bomberman.bomb_wait_turns <= 0:
                 bomberman.waiting_for_bomb = False
                 bomberman.bomb_wait_turns = 0
                 print("DEBUG: Bomb waiting period ended")
-            
+
             # No hacer más movimientos en este turno
             return
 
         # Verificar si hay una roca en el camino
         next_path_step = bomberman.path[0] if bomberman.path else None
         print(f"DEBUG: Next path step: {next_path_step}")
-        
+
         if next_path_step and self.contains_rock(next_path_step):
             print("DEBUG: Rock detected in next path step!")
             # Place bomb
@@ -176,21 +185,23 @@ class BombermanModel(Model):
 
             # Calculate safe retreat position (explosion range + 1)
             safe_distance = self.destruction_power + 2
-            
+
             # Try to retreat to a safe position
             if len(bomberman.history) >= safe_distance:
-                safe_position = bomberman.history[-(safe_distance)]  # Go back safe_distance steps
+                safe_position = bomberman.history[
+                    -(safe_distance)
+                ]  # Go back safe_distance steps
                 if self.is_valid_move(safe_position, True):
                     print(f"DEBUG: Retreating to safe position {safe_position}")
                     self.grid.move_agent(bomberman, safe_position)
                     bomberman.pos = safe_position
                     # Update history to reflect retreat
                     bomberman.history = bomberman.history[:-1]
-            
+
             # Save next step to resume later
             if bomberman.path:
                 bomberman.path.insert(0, next_path_step)
-            
+
             return
 
         # Verificar agentes en la celda actual
@@ -221,7 +232,7 @@ class BombermanModel(Model):
             alpha = -math.inf
             beta = math.inf
 
-            visualizer = TreeVisualizer()  # Crear un visualizador de árbol
+            bomberman_visualizer = TreeVisualizer()
             # Decidir el mejor movimiento para Bomberman
             _, best_bomberman_move = self.minimax(
                 depth,
@@ -230,12 +241,14 @@ class BombermanModel(Model):
                 True,
                 bomberman.pos,
                 [balloon.pos for balloon in self.balloons],
-                visualizer=visualizer,  # Pasar el visualizador
+                visualizer=bomberman_visualizer,  # Pasar el visualizador
             )
 
             # Guardar el árbol de búsqueda en una carpeta tree_expansion
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            visualizer.save(f"./project/tree_expansion/tree_{timestamp}")
+            bomberman_visualizer.save(
+                f"./project/tree_expansion/bomberman_tree_{timestamp}"
+            )
 
             # Mover Bomberman
             if best_bomberman_move:
@@ -245,26 +258,28 @@ class BombermanModel(Model):
                         bomb_agent = BombAgent(self.next_id(), self, bomberman.pos)
                         self.grid.place_agent(bomb_agent, bomberman.pos)
                         self.schedule.add(bomb_agent)
-                        
+
                         # Set bomb waiting state
                         bomberman.waiting_for_bomb = True
                         bomberman.bomb_wait_turns = 3
-                        
+
                         # Calculate safe retreat position
                         safe_distance = self.destruction_power + 2
-                        
+
                         if len(bomberman.history) >= safe_distance:
                             safe_position = bomberman.history[-(safe_distance)]
                             if self.is_valid_move(safe_position, True):
-                                print(f"DEBUG: Retreating to safe position {safe_position}")
+                                print(
+                                    f"DEBUG: Retreating to safe position {safe_position}"
+                                )
                                 self.grid.move_agent(bomberman, safe_position)
                                 bomberman.pos = safe_position
                                 bomberman.history = bomberman.history[:-1]
-                        
+
                         return
-                
+
                 bomberman.move_to(best_bomberman_move)
-                
+
                 # Añadir al historial solo si es una posición nueva
                 if bomberman.history is None:
                     bomberman.history = []
@@ -272,12 +287,24 @@ class BombermanModel(Model):
                     bomberman.history.append(bomberman.pos)
 
             for balloon in self.balloons:
+                balloon_visualizer = TreeVisualizer()
                 # Evaluar el mejor movimiento para cada globo de manera independiente
                 _, best_balloon_move = self.minimax(
-                    depth, alpha, beta, False, bomberman.pos, [balloon.pos]
+                    depth,
+                    alpha,
+                    beta,
+                    False,
+                    bomberman.pos,
+                    [balloon.pos],
+                    visualizer=balloon_visualizer,
                 )  # Pasar solo la posición del globo actual
+                balloon_visualizer.save(
+                    f"./project/tree_expansion/balloon_tree_{timestamp}"
+                )
                 if best_balloon_move:
-                    balloon.move_to(best_balloon_move)  # Mover el globo a la posición determinada
+                    balloon.move_to(
+                        best_balloon_move
+                    )  # Mover el globo a la posición determinada
 
             self.pruning_log = []  # Limpiar el registro de poda
 
@@ -286,6 +313,9 @@ class BombermanModel(Model):
                 bomberman.pos, [balloon.pos for balloon in self.balloons]
             ):
                 self.running = False
+
+        print(f"El número de nodos podados fue: {self.numero_de_nodos_podados}")
+        self.numero_de_nodos_podados = 0
 
         print(f"DEBUG: Bomberman final position: {bomberman.pos}")
         print(f"DEBUG: Bomberman final path: {bomberman.path}")
@@ -351,8 +381,12 @@ class BombermanModel(Model):
                             prune_label,
                             parent=parent,
                             pruned=True,
-                            prune_reason="Beta <= Alpha",
+                            agent="Bomberman",
                         )
+                    print(
+                        f"Nodo podado: {move} - Beta: {beta} <= Alpha: {alpha} - Profundidad: {depth} - Jugador: Bomberman"
+                    )
+                    self.numero_de_nodos_podados += 1
                     break
             return max_eval, best_move
         else:
@@ -385,8 +419,12 @@ class BombermanModel(Model):
                             prune_label,
                             parent=parent,
                             pruned=True,
-                            prune_reason="Beta <= Alpha",
+                            agent="Balloon",
                         )
+                    print(
+                        f"Nodo podado: {move} - Beta: {beta} <= Alpha: {alpha} - Profundidad: {depth} - Jugador: Globo"
+                    )
+                    self.numero_de_nodos_podados += 1
                     break
             return min_eval, best_move
 
@@ -454,7 +492,7 @@ class BombermanModel(Model):
         # Prohibir moverse a una celda con metal
         if any(isinstance(agent, MetalAgent) for agent in cell):
             return False
-    
+
         # Permitir que Bomberman se mueva hacia rocas, pero no otros agentes
         if any(isinstance(agent, RockAgent) for agent in cell):
             return is_bomberman  # Solo Bomberman puede moverse a rocas
@@ -481,7 +519,7 @@ class BombermanModel(Model):
         if any(current_pos_bomberman == pos for pos in current_pos_balloons):
             return True
         return False
-    
+
     def contains_rock(self, position):
         cell = self.grid.get_cell_list_contents(position)
         return any(isinstance(agent, RockAgent) for agent in cell)
