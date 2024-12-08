@@ -58,6 +58,8 @@ class BombermanModel(Model):
         self.turn = turn
         self.history = []
         self.history_length = 5
+        self.waiting_for_bomb = False
+        self.bomb_wait_turns = 0
 
         self.bomberman = BombermanAgent(1, self, pos_bomberman)
 
@@ -127,17 +129,81 @@ class BombermanModel(Model):
     def step(self):
         from agents.powerAgent import PowerAgent
 
+        # Inicializar atributos de espera de bomba si no existen
+        if not hasattr(self.bomberman, 'waiting_for_bomb'):
+            self.bomberman.waiting_for_bomb = False
+            self.bomberman.bomb_wait_turns = 0
+
+        print(f"DEBUG: Bomberman current position: {self.bomberman.pos}")
+        print(f"DEBUG: Bomberman current path: {self.bomberman.path}")
+        print(f"DEBUG: Bomberman history: {self.bomberman.history}")
+        print(f"DEBUG: Waiting for bomb: {self.bomberman.waiting_for_bomb}")
+        print(f"DEBUG: Bomb wait turns: {self.bomberman.bomb_wait_turns}")
+
         self.schedule.step()
 
-        agents_in_cell = self.grid.get_cell_list_contents(self.bomberman.pos)
+        # Lógica de esquive de explosiones para Bomberman
+        bomberman = self.bomberman
+        current_pos = bomberman.pos
+
+        # Verificar si está esperando la explosión de una bomba
+        if bomberman.waiting_for_bomb:
+            bomberman.bomb_wait_turns -= 1
+            print(f"DEBUG: Waiting for bomb explosion. Turns left: {bomberman.bomb_wait_turns}")
+            
+            if bomberman.bomb_wait_turns <= 0:
+                bomberman.waiting_for_bomb = False
+                bomberman.bomb_wait_turns = 0
+                print("DEBUG: Bomb waiting period ended")
+            
+            # No hacer más movimientos en este turno
+            return
+
+        # Verificar si hay una roca en el camino
+        next_path_step = bomberman.path[0] if bomberman.path else None
+        print(f"DEBUG: Next path step: {next_path_step}")
+        
+        if next_path_step and self.contains_rock(next_path_step):
+            print("DEBUG: Rock detected in next path step!")
+            # Place bomb
+            bomb_agent = BombAgent(self.next_id(), self, current_pos)
+            self.grid.place_agent(bomb_agent, current_pos)
+            self.schedule.add(bomb_agent)
+
+            # Set bomb waiting state
+            bomberman.waiting_for_bomb = True
+            bomberman.bomb_wait_turns = 3
+
+            # Calculate safe retreat position (explosion range + 1)
+            safe_distance = self.destruction_power + 2
+            
+            # Try to retreat to a safe position
+            if len(bomberman.history) >= safe_distance:
+                safe_position = bomberman.history[-(safe_distance)]  # Go back safe_distance steps
+                if self.is_valid_move(safe_position, True):
+                    print(f"DEBUG: Retreating to safe position {safe_position}")
+                    self.grid.move_agent(bomberman, safe_position)
+                    bomberman.pos = safe_position
+                    # Update history to reflect retreat
+                    bomberman.history = bomberman.history[:-1]
+            
+            # Save next step to resume later
+            if bomberman.path:
+                bomberman.path.insert(0, next_path_step)
+            
+            return
+
+        # Verificar agentes en la celda actual
+        agents_in_cell = self.grid.get_cell_list_contents(bomberman.pos)
 
         for a in agents_in_cell:
             if isinstance(a, BalloonAgent):
                 print("Bomberman ha sido derrotado")
                 self.running = False
+                return
 
         # verificar si bomberman ha pasado por la posición del poder
-        for agent in self.grid.get_cell_list_contents(self.bomberman.pos):
+        for agent in self.grid.get_cell_list_contents(bomberman.pos):
             if isinstance(agent, PowerAgent):
                 print("################# Bomberman ha obtenido un poder ###########")
                 self.destruction_power += 1
@@ -146,8 +212,9 @@ class BombermanModel(Model):
                 break
 
         # Verificar si Bomberman ha llegado a la salida
-        if self.bomberman.pos == self.pos_goal:
+        if bomberman.pos == self.pos_goal:
             self.running = False
+            return
 
         if self.search_algorithm == ALPHA_BETA:
             depth = 2 * self.difficulty
@@ -161,7 +228,7 @@ class BombermanModel(Model):
                 alpha,
                 beta,
                 True,
-                self.bomberman.pos,
+                bomberman.pos,
                 [balloon.pos for balloon in self.balloons],
                 visualizer=visualizer,  # Pasar el visualizador
             )
@@ -175,28 +242,54 @@ class BombermanModel(Model):
                 target_cell = self.grid.get_cell_list_contents(best_bomberman_move)
                 for agent in target_cell:
                     if isinstance(agent, RockAgent):
-                        bomb_agent = BombAgent(self.next_id(), self, self.bomberman.pos)
-                        self.grid.place_agent(bomb_agent, self.bomberman.pos)
+                        bomb_agent = BombAgent(self.next_id(), self, bomberman.pos)
+                        self.grid.place_agent(bomb_agent, bomberman.pos)
                         self.schedule.add(bomb_agent)
-                self.bomberman.move_to(best_bomberman_move)
+                        
+                        # Set bomb waiting state
+                        bomberman.waiting_for_bomb = True
+                        bomberman.bomb_wait_turns = 3
+                        
+                        # Calculate safe retreat position
+                        safe_distance = self.destruction_power + 2
+                        
+                        if len(bomberman.history) >= safe_distance:
+                            safe_position = bomberman.history[-(safe_distance)]
+                            if self.is_valid_move(safe_position, True):
+                                print(f"DEBUG: Retreating to safe position {safe_position}")
+                                self.grid.move_agent(bomberman, safe_position)
+                                bomberman.pos = safe_position
+                                bomberman.history = bomberman.history[:-1]
+                        
+                        return
+                
+                bomberman.move_to(best_bomberman_move)
+                
+                # Añadir al historial solo si es una posición nueva
+                if bomberman.history is None:
+                    bomberman.history = []
+                if not bomberman.history or bomberman.history[-1] != bomberman.pos:
+                    bomberman.history.append(bomberman.pos)
 
             for balloon in self.balloons:
                 # Evaluar el mejor movimiento para cada globo de manera independiente
                 _, best_balloon_move = self.minimax(
-                    depth, alpha, beta, False, self.bomberman.pos, [balloon.pos]
+                    depth, alpha, beta, False, bomberman.pos, [balloon.pos]
                 )  # Pasar solo la posición del globo actual
                 if best_balloon_move:
-                    balloon.move_to(
-                        best_balloon_move
-                    )  # Mover el globo a la posición determinada
+                    balloon.move_to(best_balloon_move)  # Mover el globo a la posición determinada
 
             self.pruning_log = []  # Limpiar el registro de poda
 
             # Verificar si el juego ha terminado
             if self.game_over(
-                self.bomberman.pos, [balloon.pos for balloon in self.balloons]
+                bomberman.pos, [balloon.pos for balloon in self.balloons]
             ):
                 self.running = False
+
+        print(f"DEBUG: Bomberman final position: {bomberman.pos}")
+        print(f"DEBUG: Bomberman final path: {bomberman.path}")
+        print(f"DEBUG: Bomberman final history: {bomberman.history}")
 
     def next_id(self) -> int:
         return super().next_id()
