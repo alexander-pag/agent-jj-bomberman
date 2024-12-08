@@ -5,6 +5,6 @@ X, B, C, C, M, C, C, M, C, X
 X, M, C, C, C, C, C, C, C, X
 X, C, C, M, M, C, M, C, C, X
 X, C, C, C, C, C, M, C, C, X
-X, C, C, M, M, C, M, C, M, X
-X, C, C, C, C, C, C, M, G, X
+X, C, C, M, M, C, M, C, C, X
+X, C, C, C, C, C, C, C, G, X
 X, X, X, X, X, X, X, X, X, X

@@ -9,6 +9,7 @@ from agents import (
     BorderAgent,
     GoalAgent,
     BalloonAgent,
+    BombAgent,
 )
 from config.constants import *
 import random
@@ -171,7 +172,12 @@ class BombermanModel(Model):
 
             # Mover Bomberman
             if best_bomberman_move:
-                self.visited_cells.append(self.bomberman.pos)
+                target_cell = self.grid.get_cell_list_contents(best_bomberman_move)
+                for agent in target_cell:
+                    if isinstance(agent, RockAgent):
+                        bomb_agent = BombAgent(self.next_id(), self, self.bomberman.pos)
+                        self.grid.place_agent(bomb_agent, self.bomberman.pos)
+                        self.schedule.add(bomb_agent)
                 self.bomberman.move_to(best_bomberman_move)
 
             for balloon in self.balloons:
@@ -355,6 +361,10 @@ class BombermanModel(Model):
         # Prohibir moverse a una celda con metal
         if any(isinstance(agent, MetalAgent) for agent in cell):
             return False
+    
+        # Permitir que Bomberman se mueva hacia rocas, pero no otros agentes
+        if any(isinstance(agent, RockAgent) for agent in cell):
+            return is_bomberman  # Solo Bomberman puede moverse a rocas
 
         # Prohibir que Bomberman se mueva a una celda ocupada por un globo
         if is_bomberman and any(isinstance(agent, BalloonAgent) for agent in cell):
@@ -378,3 +388,7 @@ class BombermanModel(Model):
         if any(current_pos_bomberman == pos for pos in current_pos_balloons):
             return True
         return False
+    
+    def contains_rock(self, position):
+        cell = self.grid.get_cell_list_contents(position)
+        return any(isinstance(agent, RockAgent) for agent in cell)
